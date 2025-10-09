@@ -1,3 +1,5 @@
+
+
 # Business Understanding
 
 ## Contexto general
@@ -58,3 +60,55 @@ A continuación, se presentan los términos clave que se usarán en el análisis
 | **Régimen de afiliación en salud** | Forma en que las personas están vinculadas al sistema de salud. Los principales son: *régimen contributivo* (para quienes cotizan) y *régimen subsidiado* (para personas en situación de vulnerabilidad). |
 | **Régimen subsidiado** | Tipo de afiliación en salud dirigido a la población con menores ingresos o en condición de vulnerabilidad, financiado con recursos del Estado. |
 | **Zona de alerta** | Localidad donde se observa un aumento importante o sostenido en el número de intervenciones, lo que puede requerir atención prioritaria. |
+
+
+#  2. Data Understanding)
+
+## Descripción general de la base de datos
+La base de datos utilizada corresponde a los registros de **intervenciones con niños, niñas y adolescentes (NNA)** realizadas en Bogotá entre los años **2021 y 2025**.  
+Contiene información sobre las intervenciones ejecutadas en diferentes **localidades de la ciudad**, junto con variables que permiten conocer el **tipo de afiliación en salud** y otras características asociadas a cada caso.  
+
+Esta base fue construida con información institucional anónima y tiene como propósito analizar los cambios en la atención o intervención con la población NNA desde una perspectiva **espacio-temporal y social**.  
+
+---
+
+## Variables principales
+A continuación se describen las variables más importantes incluidas en el análisis:
+
+| **Variable** | **Descripción** |
+|---------------|----------------|
+| **Año** | Año en el que se realizó la intervención (rango: 2021–2025). |
+| **Mes** *(si aplica)* | Permite observar variaciones más detalladas dentro de cada año. |
+| **Localidad** | División territorial de Bogotá donde ocurrió la intervención. Es clave para el análisis espacial. |
+| **Tipo de intervención** | Clasifica la acción o atención realizada con el NNA. |
+| **Régimen de afiliación en salud** | Indica si el NNA pertenece al régimen contributivo, subsidiado u otro tipo de afiliación. |
+| **Sexo** | Variable de apoyo para análisis demográficos. |
+| **Edad** | Edad del NNA al momento de la intervención. |
+| **Número de intervenciones** | Representa el conteo total de registros o casos por localidad y año. |
+
+---
+
+## Observaciones iniciales
+- Los datos abarcan un **periodo de cinco años (2021–2025)**, lo que permite analizar **tendencias en el tiempo**.  
+- La variable **localidad** permitirá observar la **distribución territorial** de las intervenciones.  
+- La información sobre **régimen de afiliación** es fundamental para explorar **diferencias sociales** y aproximar posibles relaciones entre vulnerabilidad y número de intervenciones.  
+- Es posible que existan valores faltantes o inconsistencias (por ejemplo, registros sin localidad o sin tipo de régimen), que deberán revisarse durante la etapa de preparación de los datos.  
+
+---
+
+## Posibles transformaciones
+Para facilitar el análisis, se planea:
+- Agrupar los datos por **localidad y año**.  
+- Calcular indicadores como **variación porcentual** de intervenciones entre años.  
+- Crear una variable que refleje la **proporción de casos según el régimen subsidiado**.  
+- Generar visualizaciones iniciales (tablas, gráficos y mapas) para entender los patrones generales.  
+
+---
+
+## Propósito del análisis exploratorio
+El análisis exploratorio permitirá:
+- Detectar **patrones de crecimiento o disminución** en las intervenciones por localidad.  
+- Identificar **zonas de concentración o alerta**.  
+- Comprender **cómo se distribuyen las intervenciones según el régimen de afiliación**, especialmente el subsidiado.  
+- Reconocer **posibles errores o vacíos** en los datos antes de pasar a la siguiente fase de preparación.  
+
