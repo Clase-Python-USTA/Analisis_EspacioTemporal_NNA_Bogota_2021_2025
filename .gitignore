@@ -1,0 +1,39 @@
+# ============================================================
+# .gitignore - Proyecto NNA Bogotá
+# ============================================================
+
+# Archivos de configuración sensibles
+.env
+
+# Datos (no subir datos reales)
+data/raw/*.xlsx
+data/raw/*.xls
+data/raw/*.csv
+data/processed/
+
+# Reportes generados
+reports/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
