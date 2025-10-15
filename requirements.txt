@@ -1,24 +1,21 @@
 # ============================================================
 # DEPENDENCIAS - Proyecto NNA Bogotá
 # ============================================================
-#
 # INSTALACIÓN:
 # pip install -r requirements.txt
-#
 # ============================================================
 
 # Manejo de datos
-pandas==2.1.4
-numpy==1.26.2
-openpyxl==3.1.2
+pandas==2.2.3
+numpy==2.3.3
 
 # Visualizaciones
-matplotlib==3.8.2
-seaborn==0.13.0
+matplotlib==3.9.2
+seaborn==0.13.2
 
 # Variables de entorno
-python-dotenv==1.0.0
+python-dotenv==1.0.1
 
-# Opcional: Para análisis adicionales
-scipy==1.11.4
-scikit-learn==1.3.2
+# Análisis adicionales
+scipy==1.15.3
+scikit-learn==1.5.2

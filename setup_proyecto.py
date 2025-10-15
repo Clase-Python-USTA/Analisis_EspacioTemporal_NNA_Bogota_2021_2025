@@ -16,29 +16,29 @@ EJECUCIÓN:
 ============================================================
 """
 
-import os
-import sys
+import os # Para crear carpetas y manejar rutas
+import sys # Para interactuar con el sistema
 
 def crear_estructura_carpetas():
     """Crea la estructura de carpetas del proyecto"""
     carpetas = [
-        'scripts',
-        'data/raw',
-        'reports',
-        'reports/tables',
-        'reports/figures',
-        'reports/figures/temporal',
-        'reports/figures/spatial',
-        'reports/figures/exploratory'
+        'scripts', # Carpeta para scripts de Python
+        'data/raw', # Carpeta para los datos originales
+        'reports', # Carpeta general de reportes
+        'reports/tables', # Subcarpeta para tablas generadas
+        'reports/figures', # Subcarpeta para gráficos
+        'reports/figures/temporal', # Gráficos temporales
+        'reports/figures/spatial', # Gráficos espaciales
+        'reports/figures/exploratory' # Gráficos exploratorios
     ]
     
-    print("📁 Creando estructura de carpetas...")
+    print(" Creando estructura de carpetas...")
     for carpeta in carpetas:
-        os.makedirs(carpeta, exist_ok=True)
-        print(f"   ✓ {carpeta}")
+        os.makedirs(carpeta, exist_ok=True)  # Crea la carpeta si no existe
+        print(f"   ✓ {carpeta}") # Confirma creación de cada carpeta
     print()
 
-
+# Función que crea el archivo .env con la ruta de datos
 def crear_env():
     """Crea el archivo .env"""
     contenido = """# ============================================================
@@ -58,45 +58,42 @@ DATA_FILE=data/raw/base_datos_completa_NNA_TI_anon.xlsx
 """
     
     with open('.env', 'w', encoding='utf-8') as f:
-        f.write(contenido)
+        f.write(contenido) # Guarda el contenido en .env
     
-    print("✅ Archivo .env creado")
+    print(" Archivo .env creado") # Confirma creación
 
-
+# Función que crea el archivo requirements.txt con dependencias necesarias
 def crear_requirements():
     """Crea el archivo requirements.txt"""
     contenido = """# ============================================================
 # DEPENDENCIAS - Proyecto NNA Bogotá
 # ============================================================
-#
 # INSTALACIÓN:
 # pip install -r requirements.txt
-#
 # ============================================================
 
 # Manejo de datos
-pandas==2.1.4
-numpy==1.26.2
-openpyxl==3.1.2
+pandas==2.2.3
+numpy==2.3.3
 
 # Visualizaciones
-matplotlib==3.8.2
-seaborn==0.13.0
+matplotlib==3.9.2
+seaborn==0.13.2
 
 # Variables de entorno
-python-dotenv==1.0.0
+python-dotenv==1.0.1
 
-# Opcional: Para análisis adicionales
-scipy==1.11.4
-scikit-learn==1.3.2
+# Análisis adicionales
+scipy==1.15.3
+scikit-learn==1.5.2
 """
     
     with open('requirements.txt', 'w', encoding='utf-8') as f:
-        f.write(contenido)
+        f.write(contenido) # Escribe las dependencias en el archivo
     
-    print("✅ Archivo requirements.txt creado")
+    print(" Archivo requirements.txt creado") # Confirma creación
 
-
+# Función que crea .gitignore para ignorar archivos no deseados en Github
 def crear_gitignore():
     """Crea el archivo .gitignore"""
     contenido = """# ============================================================
@@ -141,33 +138,33 @@ Thumbs.db
 """
     
     with open('.gitignore', 'w', encoding='utf-8') as f:
-        f.write(contenido)
+        f.write(contenido)# Guarda contenido en .gitignore
     
-    print("✅ Archivo .gitignore creado")
+    print(" Archivo .gitignore creado")# Confirma creación
 
-
+# Función que crea README.md con información del proyecto
 def crear_readme():
     """Crea el archivo README.md"""
-    contenido = """# 📊 Data Understanding - Proyecto NNA Bogotá (2021-2025)
+    contenido = """#  Data Understanding - Proyecto NNA Bogotá (2021-2025)
 
 Análisis exploratorio completo de intervenciones con Niños, Niñas y Adolescentes en Bogotá, incluyendo análisis espacio-temporal y de contexto social.
 
-## 🎯 Características principales
+##  Características principales
 
-- ✅ **Carga automática** de archivos Excel (.xlsx, .xls) o CSV
-- 🧹 **Limpieza y normalización** de columnas
-- 🔒 **Anonimización** de datos sensibles
-- 📖 **Diccionario de datos** completo y automático
-- 🔍 **Análisis exploratorio exhaustivo** de todas las variables
-- 📈 **Análisis espacio-temporal** con detección de tendencias
-- 💊 **Análisis de régimen de salud** y contexto social
-- 🗺️ **Identificación de zonas de alerta** por cambios significativos
-- 📊 **Visualizaciones automáticas** (gráficos, mapas de calor, correlaciones)
-- 📝 **Reportes en múltiples formatos** (Excel, CSV, JSON, Markdown)
+-  **Carga automática** de archivos Excel (.xlsx, .xls) o CSV
+-  **Limpieza y normalización** de columnas
+-  **Anonimización** de datos sensibles
+-  **Diccionario de datos** completo y automático
+-  **Análisis exploratorio exhaustivo** de todas las variables
+-  **Análisis espacio-temporal** con detección de tendencias
+-  **Análisis de régimen de salud** y contexto social
+-  **Identificación de zonas de alerta** por cambios significativos
+-  **Visualizaciones automáticas** (gráficos, mapas de calor, correlaciones)
+-  **Reportes en múltiples formatos** (Excel, CSV, JSON, Markdown)
 
 ---
 
-## 🚀 Instalación rápida
+##  Instalación rápida
 
 ```bash
 # 1. Instalar dependencias
@@ -182,7 +179,7 @@ python scripts/data_understanding.py
 
 ---
 
-## 📂 Estructura del proyecto
+##  Estructura del proyecto
 
 ```
 Analisis_EspacioTemporal_NNA_Bogota_2021_2025/
@@ -210,7 +207,7 @@ Analisis_EspacioTemporal_NNA_Bogota_2021_2025/
 
 ---
 
-## ▶️ Uso detallado
+## ▶ Uso detallado
 
 ### Configuración inicial
 
@@ -233,11 +230,11 @@ python scripts/data_understanding.py
 
 **Desde VS Code:**
 1. Abre `scripts/data_understanding.py`
-2. Presiona `F5` o click en Run ▶️
+2. Presiona `F5` o click en Run ▶
 
 ---
 
-## 📊 Resultados generados
+##  Resultados generados
 
 ### Tablas (Excel/CSV)
 - `diccionario_datos.xlsx` - Descripción completa de variables
@@ -260,7 +257,7 @@ python scripts/data_understanding.py
 
 ---
 
-## 🎯 Objetivos del análisis
+##  Objetivos del análisis
 
 1. **Describir** la distribución de intervenciones por localidad y año
 2. **Identificar** localidades con aumentos o disminuciones significativas
@@ -268,7 +265,7 @@ python scripts/data_understanding.py
 
 ---
 
-## ⚠️ Solución de problemas
+##  Solución de problemas
 
 ### Error: "No se encontró DATA_FILE"
 - Verifica que existe el archivo `.env`
@@ -283,15 +280,15 @@ python scripts/data_understanding.py
 
 ---
 
-## 📝 Notas importantes
+##  Notas importantes
 
-- ⚠️ **Privacidad**: El script anonimiza automáticamente datos sensibles
-- ⏱️ **Tiempo**: Archivos grandes pueden tardar varios minutos
-- 💾 **Espacio**: Reserva ~500MB para reportes y figuras
+-  **Privacidad**: El script anonimiza automáticamente datos sensibles
+-  **Tiempo**: Archivos grandes pueden tardar varios minutos
+-  **Espacio**: Reserva ~500MB para reportes y figuras
 
 ---
 
-## 📧 Contacto
+##  Contacto
 
 Para dudas o problemas, revisar la documentación en el código fuente.
 
@@ -304,12 +301,12 @@ Para dudas o problemas, revisar la documentación en el código fuente.
     with open('README.md', 'w', encoding='utf-8') as f:
         f.write(contenido)
     
-    print("✅ Archivo README.md creado")
+    print(" Archivo README.md creado")
 
 
 def crear_data_understanding():
     """Crea el script principal data_understanding.py"""
-    # Aquí va el código completo que ya creamos
+    # Aquí va el código completo del script data_understanding.py
     contenido = '''# ============================================================
 # DATA UNDERSTANDING - Proyecto NNA Bogotá (2021–2025)
 # Versión extendida con análisis espacio-temporal
@@ -339,12 +336,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 DATA_FILE = os.getenv("DATA_FILE")
 
 if not DATA_FILE:
-    raise ValueError("❌ No se encontró la variable DATA_FILE en el archivo .env")
+    raise ValueError(" No se encontró la variable DATA_FILE en el archivo .env")
 
 file_path = os.path.join(BASE_DIR, DATA_FILE)
 
 if not os.path.exists(file_path):
-    raise FileNotFoundError(f"❌ No se encontró el archivo: {file_path}")
+    raise FileNotFoundError(f" No se encontró el archivo: {file_path}")
 
 # Estructura de carpetas
 REPORTS_DIR = os.path.join(BASE_DIR, "reports")
@@ -359,7 +356,7 @@ ALERT_ZONES_FILE = os.path.join(TABLES_DIR, "zonas_alerta.csv")
 for path in [REPORTS_DIR, FIGURES_DIR, TABLES_DIR, TEMPORAL_DIR, SPATIAL_DIR, EXPLORATORY_DIR]:
     os.makedirs(path, exist_ok=True)
 
-print(f"📁 Estructura de carpetas creada en: {REPORTS_DIR}")
+print(f" Estructura de carpetas creada en: {REPORTS_DIR}")
 
 
 # ============================================================
@@ -370,7 +367,7 @@ def load_data(file_path):
     """Carga datos desde Excel o CSV con detección automática"""
     ext = os.path.splitext(file_path)[-1].lower()
     
-    print(f"📂 Cargando archivo: {os.path.basename(file_path)}")
+    print(f" Cargando archivo: {os.path.basename(file_path)}")
     
     if ext in ['.xlsx', '.xls']:
         xls = pd.ExcelFile(file_path)
@@ -382,9 +379,9 @@ def load_data(file_path):
         df = pd.read_csv(file_path, sep=None, engine='python', encoding='utf-8')
         print(f"   ✓ CSV cargado con detección automática de separador")
     else:
-        raise ValueError("❌ Formato no compatible. Usa .csv, .xlsx o .xls")
+        raise ValueError(" Formato no compatible. Usa .csv, .xlsx o .xls")
     
-    print(f"✅ Datos cargados: {df.shape[0]:,} filas × {df.shape[1]} columnas")
+    print(f" Datos cargados: {df.shape[0]:,} filas × {df.shape[1]} columnas")
     return df
 
 
@@ -408,7 +405,7 @@ def clean_columns(df):
     with open(os.path.join(TABLES_DIR, "column_mapping.json"), "w", encoding="utf-8") as f:
         json.dump(col_mapping, f, indent=2, ensure_ascii=False)
     
-    print(f"✅ Columnas normalizadas: {len(df.columns)} variables")
+    print(f" Columnas normalizadas: {len(df.columns)} variables")
     return df
 
 
@@ -430,7 +427,7 @@ def anonymize(df):
         if df[col].dtype == 'object' or pd.api.types.is_integer_dtype(df[col]):
             df[col] = df[col].apply(lambda x: hashlib.sha256(str(x).encode()).hexdigest()[:16] if pd.notna(x) else x)
     
-    print(f"✅ Anonimización completa: {len(removed)} columnas eliminadas, {len(id_cols)} IDs encriptados")
+    print(f" Anonimización completa: {len(removed)} columnas eliminadas, {len(id_cols)} IDs encriptados")
     return df
 
 
@@ -465,10 +462,10 @@ def detect_temporal_columns(df):
     
     if 'AÑO' in df.columns:
         years = df['AÑO'].dropna().unique()
-        print(f"✅ Años detectados: {sorted([int(y) for y in years if not np.isnan(y)])}")
+        print(f" Años detectados: {sorted([int(y) for y in years if not np.isnan(y)])}")
         temporal_info['years_available'] = sorted([int(y) for y in years if not np.isnan(y)])
     else:
-        print("⚠️  No se detectó columna de año")
+        print("  No se detectó columna de año")
     
     return df, temporal_info
 
@@ -477,7 +474,7 @@ def detect_temporal_columns(df):
 # Por limitaciones de espacio, te mostraré cómo crear el archivo completo...
 '''
     
-    print("⚠️  Creando script data_understanding.py...")
+    print("  Creando script data_understanding.py...")
     print("   Por favor, copia el código completo del artifact 'data_understanding_nna'")
     print("   y pégalo en: scripts/data_understanding.py")
     print()
@@ -486,7 +483,7 @@ def detect_temporal_columns(df):
 def main():
     """Ejecuta la configuración completa del proyecto"""
     print("="*70)
-    print("🚀 CONFIGURACIÓN AUTOMÁTICA DEL PROYECTO")
+    print(" CONFIGURACIÓN AUTOMÁTICA DEL PROYECTO")
     print("   Análisis NNA Bogotá (2021-2025)")
     print("="*70)
     print()
@@ -499,41 +496,41 @@ def main():
     crear_readme()
     
     print("="*70)
-    print("✅ CONFIGURACIÓN COMPLETADA")
+    print(" CONFIGURACIÓN COMPLETADA")
     print("="*70)
     print()
-    print("📋 PRÓXIMOS PASOS:")
+    print(" PRÓXIMOS PASOS:")
     print()
-    print("1. 📝 Copia el código del artifact 'data_understanding_nna' completo")
+    print("1.  Copia el código del artifact 'data_understanding_nna' completo")
     print("   y pégalo en: scripts/data_understanding.py")
     print()
-    print("2. ⚙️  Edita el archivo .env y actualiza la ruta de tus datos:")
+    print("2.   Edita el archivo .env y actualiza la ruta de tus datos:")
     print("   DATA_FILE=data/raw/tu_archivo.xlsx")
     print()
-    print("3. 📦 Instala las dependencias:")
+    print("3.  Instala las dependencias:")
     print("   pip install -r requirements.txt")
     print()
-    print("4. ▶️  Ejecuta el análisis:")
+    print("4.   Ejecuta el análisis:")
     print("   python scripts/data_understanding.py")
     print()
     print("="*70)
     print()
-    print("📁 Archivos creados:")
+    print(" Archivos creados:")
     print("   ✓ .env")
     print("   ✓ .gitignore") 
     print("   ✓ requirements.txt")
     print("   ✓ README.md")
     print("   ✓ Estructura de carpetas")
     print()
-    print("⚠️  PENDIENTE: Crear scripts/data_understanding.py")
+    print("  PENDIENTE: Crear scripts/data_understanding.py")
     print("   (Copia el código del artifact que te compartí)")
     print()
 
 
 if __name__ == "__main__":
     try:
-        main()
+        main()  # Ejecuta la configuración completa
     except Exception as e:
         print(f"\n❌ ERROR: {str(e)}")
         import traceback
-        traceback.print_exc()
+        traceback.print_exc()# Muestra traceback completo

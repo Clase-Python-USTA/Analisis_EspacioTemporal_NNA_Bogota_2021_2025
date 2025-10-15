@@ -3,51 +3,51 @@
 # Versión extendida con análisis espacio-temporal
 # ============================================================
 
-import os
-import pandas as pd
-import numpy as np
-import hashlib
-import matplotlib.pyplot as plt
-import seaborn as sns
-from dotenv import load_dotenv
-from datetime import datetime
-import warnings
-import json
+import os # manejo de rutas y directorios.
+import pandas as pd # manipulación de datos.
+import numpy as np # manipulación numérica.
+import hashlib # funciones hash para anonimización.
+import matplotlib.pyplot as plt # visualización.
+import seaborn as sns # visualización avanzada.
+from dotenv import load_dotenv # carga de variables de entorno.
+from datetime import datetime # manejo de fechas.
+import warnings # manejo de advertencias.
+import json # manejo de archivos JSON.
 
-warnings.filterwarnings('ignore')
-sns.set_style("whitegrid")
+warnings.filterwarnings('ignore')# Ignorar advertencias innecesarias
+sns.set_style("whitegrid")# Estilo de gráficos
 
 # ============================================================
 # 1. CONFIGURACIÓN DE RUTAS
 # ============================================================
 
-load_dotenv()
+load_dotenv() # Cargar variables de entorno desde .env
 
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-DATA_FILE = os.getenv("DATA_FILE")
+BASE_DIR = os.path.dirname(os.path.dirname(__file__)) # Directorio base del proyecto
+DATA_FILE = os.getenv("DATA_FILE")# Ruta del archivo de datos desde .env
 
-if not DATA_FILE:
-    raise ValueError("❌ No se encontró la variable DATA_FILE en el archivo .env")
+if not DATA_FILE: # Verificar que la variable exista
+    raise ValueError(" No se encontró la variable DATA_FILE en el archivo .env") #  Error si no existe
 
-file_path = os.path.join(BASE_DIR, DATA_FILE)
+file_path = os.path.join(BASE_DIR, DATA_FILE)# Ruta completa del archivo de datos
 
-if not os.path.exists(file_path):
-    raise FileNotFoundError(f"❌ No se encontró el archivo: {file_path}")
+if not os.path.exists(file_path):# Verificar que el archivo exista
+    raise FileNotFoundError(f"❌ No se encontró el archivo: {file_path}")# Error si no existe
 
 # Estructura de carpetas
-REPORTS_DIR = os.path.join(BASE_DIR, "reports")
-FIGURES_DIR = os.path.join(REPORTS_DIR, "figures")
-TABLES_DIR = os.path.join(REPORTS_DIR, "tables")
-TEMPORAL_DIR = os.path.join(FIGURES_DIR, "temporal")
-SPATIAL_DIR = os.path.join(FIGURES_DIR, "spatial")
-EXPLORATORY_DIR = os.path.join(FIGURES_DIR, "exploratory")
-SUMMARY_FILE = os.path.join(REPORTS_DIR, "data_summary.md")
-ALERT_ZONES_FILE = os.path.join(TABLES_DIR, "zonas_alerta.csv")
+REPORTS_DIR = os.path.join(BASE_DIR, "reports")# Carpeta principal de reportes
+FIGURES_DIR = os.path.join(REPORTS_DIR, "figures")# Carpeta de figuras
+TABLES_DIR = os.path.join(REPORTS_DIR, "tables")# Carpeta de tablas
+TEMPORAL_DIR = os.path.join(FIGURES_DIR, "temporal")# Carpeta de figuras temporales
+SPATIAL_DIR = os.path.join(FIGURES_DIR, "spatial")# Carpeta de figuras espaciales
+EXPLORATORY_DIR = os.path.join(FIGURES_DIR, "exploratory")# Carpeta de figuras exploratorias
+SUMMARY_FILE = os.path.join(REPORTS_DIR, "data_summary.md")# Resumen en Markdown
+ALERT_ZONES_FILE = os.path.join(TABLES_DIR, "zonas_alerta.csv")# Zonas de alerta
 
-for path in [REPORTS_DIR, FIGURES_DIR, TABLES_DIR, TEMPORAL_DIR, SPATIAL_DIR, EXPLORATORY_DIR]:
-    os.makedirs(path, exist_ok=True)
+for path in [REPORTS_DIR, FIGURES_DIR, TABLES_DIR, TEMPORAL_DIR, SPATIAL_DIR, EXPLORATORY_DIR]:# Crear carpetas si no existen
+    os.makedirs(path, exist_ok=True)# Crear carpetas si no existen
 
-print(f"📁 Estructura de carpetas creada en: {REPORTS_DIR}")
+print(f" Estructura de carpetas creada en: {REPORTS_DIR}")    
 
 
 # ============================================================
@@ -55,25 +55,25 @@ print(f"📁 Estructura de carpetas creada en: {REPORTS_DIR}")
 # ============================================================
 
 def load_data(file_path):
-    """Carga datos desde Excel o CSV con detección automática"""
-    ext = os.path.splitext(file_path)[-1].lower()
+    """Carga datos desde Excel o CSV con detección automática""" # Carga datos desde Excel o CSV con detección automática
+    ext = os.path.splitext(file_path)[-1].lower() # Extensión del archivo
     
-    print(f"📂 Cargando archivo: {os.path.basename(file_path)}")
+    print(f" Cargando archivo: {os.path.basename(file_path)}") # Cargando archivo
     
-    if ext in ['.xlsx', '.xls']:
-        xls = pd.ExcelFile(file_path)
-        print(f"   Hojas disponibles: {xls.sheet_names}")
-        sheet = 'BD' if 'BD' in xls.sheet_names else xls.sheet_names[-1]
-        df = pd.read_excel(file_path, sheet_name=sheet)
-        print(f"   ✓ Cargada hoja: {sheet}")
+    if ext in ['.xlsx', '.xls']:# Archivo Excel
+        xls = pd.ExcelFile(file_path)# Cargar archivo Excel
+        print(f"   Hojas disponibles: {xls.sheet_names}")# Listar hojas disponibles
+        sheet = 'BD' if 'BD' in xls.sheet_names else xls.sheet_names[-1]# Seleccionar hoja 'BD' 
+        df = pd.read_excel(file_path, sheet_name=sheet)# Cargar hoja seleccionada
+        print(f"   ✓ Cargada hoja: {sheet}")# Confirmar hoja cargada
     elif ext == '.csv':
-        df = pd.read_csv(file_path, sep=None, engine='python', encoding='utf-8')
-        print(f"   ✓ CSV cargado con detección automática de separador")
+        df = pd.read_csv(file_path, sep=None, engine='python', encoding='utf-8')# Cargar CSV con detección automática de separador
+        print(f"   ✓ CSV cargado con detección automática de separador")# Confirmar carga CSV
     else:
-        raise ValueError("❌ Formato no compatible. Usa .csv, .xlsx o .xls")
+        raise ValueError("❌ Formato no compatible. Usa .csv, .xlsx o .xls")# Error si formato no compatible
     
-    print(f"✅ Datos cargados: {df.shape[0]:,} filas × {df.shape[1]} columnas")
-    return df
+    print(f"✅ Datos cargados: {df.shape[0]:,} filas × {df.shape[1]} columnas")# Confirmar dimensiones
+    return df# Retornar DataFrame
 
 
 # ============================================================
@@ -82,7 +82,7 @@ def load_data(file_path):
 
 def clean_columns(df):
     """Limpia y normaliza nombres de columnas"""
-    original_cols = df.columns.tolist()
+    original_cols = df.columns.tolist()# Guardar nombres originales de columnas 
     
     df.columns = (
         df.columns
@@ -90,84 +90,81 @@ def clean_columns(df):
         .str.replace(' ', '_')
         .str.replace(r'[^\w]', '', regex=True)
         .str.upper()
-    )
+    )# Normalizar nombres de columnas 
     
-    col_mapping = dict(zip(original_cols, df.columns))
-    with open(os.path.join(TABLES_DIR, "column_mapping.json"), "w", encoding="utf-8") as f:
-        json.dump(col_mapping, f, indent=2, ensure_ascii=False)
+    col_mapping = dict(zip(original_cols, df.columns))# Mapeo de nombres originales a normalizados
+    with open(os.path.join(TABLES_DIR, "column_mapping.json"), "w", encoding="utf-8") as f: # Guardar mapeo en JSON 
+        json.dump(col_mapping, f, indent=2, ensure_ascii=False) # Guardar mapeo en JSON 
     
-    print(f"✅ Columnas normalizadas: {len(df.columns)} variables")
-    return df
+    print(f" Columnas normalizadas: {len(df.columns)} variables")# Confirmar normalización
+    return df # Retornar DataFrame
 
 
 def anonymize(df):
-    """Anonimiza información sensible sin afectar variables geográficas."""
+    """Verificación de anonimización - El archivo ya viene anonimizado del origen"""
+    
+    # Solo verificar si existen columnas personales sensibles y eliminarlas
+    # (probablemente ya no existen en el archivo anonimizado)
     sensitive_cols = [
-        'USUARIO', 'NOMBRE', 'APELLIDO', 'DOCUMENTO', 'ID_USUARIO',
-        'DIRECCIÓN', 'DIRECCION', 'DIRECCIÓN_DE_LA_VIVIENDA', 'DIRECCION_VIVIENDA',
-        'CORREO', 'CORREO_1', 'CORREO_2', 'EMAIL', 'MAIL',
-        'TELÉFONO', 'TELEFONO', 'TELÉFONO_1', 'TELÉFONO_2', 'TELEFONO_1', 'TELEFONO_2', 'CELULAR',
-        'NOMBRE_EAPB', 'NOMBRE_EAPB1', 'RESPONSABLE', 'ACUDIENTE'
-    ]
+        'USUARIO', 'NOMBRE', 'APELLIDO', 'DOCUMENTO', 
+        'DIRECCIÓN', 'DIRECCION', 'CORREO', 'EMAIL', 
+        'TELÉFONO', 'TELEFONO', 'CELULAR',
+        'NOMBRE_EAPB', 'RESPONSABLE', 'ACUDIENTE'
+    ]# Columnas sensibles a eliminar si existen 
     
-    # Eliminar columnas sensibles si existen
-    removed = [c for c in sensitive_cols if c in df.columns]
-    df.drop(columns=removed, inplace=True, errors='ignore')
+    removed = [c for c in sensitive_cols if c in df.columns] # Columnas realmente presentes en el DataFrame
+    if removed: # Si hay columnas sensibles presentes
+        df.drop(columns=removed, inplace=True, errors='ignore')# Eliminar columnas sensibles
     
-    # Anonimizar solo columnas que contengan "ID" pero sin tocar las geográficas o de referencia territorial
-    id_cols = [
-        c for c in df.columns 
-        if 'ID' in c 
-        and c not in ['ID_LOCALIDAD', 'ID_UPZ', 'LOCALIDAD', 'LOCALIDAD_FIC']
-    ]
+    #  IMPORTANTE: NO ENCRIPTAMOS NADA
+    # El archivo fuente ya está completamente anonimizado
+    # Todas las columnas se mantienen tal como están
     
-    # Aplicar hash a las columnas identificadas como ID
-    for col in id_cols:
-        if df[col].dtype == 'object' or pd.api.types.is_integer_dtype(df[col]):
-            df[col] = df[col].apply(lambda x: hashlib.sha256(str(x).encode()).hexdigest()[:16] if pd.notna(x) else x)
+    print(f" Verificación completada: {len(removed)} columnas eliminadas") # Confirmar eliminación
+    print(f"     El archivo fuente ya está COMPLETAMENTE ANONIMIZADO") # Confirmar anonimización
+    print(f"   ✓ TODAS las variables se mantienen intactas para análisis") # Confirmar mantenimiento de variables
+    print(f"   ✓ Los valores como '824e28643eaef519' son datos ya anonimizados del origen") # Confirmar mantenimiento de variables
     
-    print(f"✅ Anonimización completa: {len(removed)} columnas eliminadas, {len(id_cols)} IDs encriptados (sin afectar LOCALIDAD ni LOCALIDAD_FIC)")
-    return df
-
+    return df # Retornar DataFrame
 
 
 # ============================================================
 # 4. DETECCIÓN AUTOMÁTICA DE VARIABLES TEMPORALES
 # ============================================================
 
-def detect_temporal_columns(df):
-    """Detecta y procesa columnas de fecha/año"""
-    temporal_info = {}
+def detect_temporal_columns(df): 
+    """Detecta y procesa columnas de fecha/año""" # Detecta y procesa columnas de fecha/año
+    temporal_info = {} # Diccionario para almacenar información temporal
     
-    date_candidates = [c for c in df.columns if any(x in c for x in ['FECHA', 'DATE', 'AÑO', 'ANO', 'YEAR', 'MES', 'MONTH'])]
+    date_candidates = [c for c in df.columns if any(x in c for x in ['FECHA', 'DATE', 'AÑO', 'ANO', 'YEAR', 'MES', 'MONTH'])] # Candidatas a columnas de fecha/año
     
-    for col in date_candidates:
-        if pd.api.types.is_datetime64_any_dtype(df[col]):
-            temporal_info[col] = 'datetime'
-        elif df[col].dtype == 'object':
+    for col in date_candidates: # Intentar convertir a datetime
+        if pd.api.types.is_datetime64_any_dtype(df[col]): # Ya es datetime
+            temporal_info[col] = 'datetime'# Confirmar tipo datetime
+        elif df[col].dtype == 'object':# Intentar conversión
             try:
-                df[col] = pd.to_datetime(df[col], errors='coerce')
-                temporal_info[col] = 'datetime_converted'
-            except:
+                df[col] = pd.to_datetime(df[col], errors='coerce')# Convertir a datetime
+                temporal_info[col] = 'datetime_converted'# Confirmar conversión exitosa
+            except:# Ignorar errores
                 pass
     
-    for col in temporal_info.keys():
-        if 'AÑO' not in df.columns and 'YEAR' not in df.columns:
-            df['AÑO'] = df[col].dt.year
-            print(f"   ✓ Columna 'AÑO' extraída de {col}")
+    for col in temporal_info.keys(): # Extraer año si es datetime
+        if 'AÑO' not in df.columns and 'YEAR' not in df.columns: # Solo si no existe ya
+            df['AÑO'] = df[col].dt.year # Extraer año
+            print(f"   ✓ Columna 'AÑO' extraída de {col}") # Confirmar extracción
     
-    year_cols = [c for c in df.columns if c in ['AÑO', 'ANO', 'YEAR', 'ANIO']]
+    year_cols = [c for c in df.columns if c in ['AÑO', 'ANO', 'YEAR', 'ANIO']] # Columnas que podrían ser año
     if year_cols:
-        df['AÑO'] = pd.to_numeric(df[year_cols[0]], errors='coerce')
+        df['AÑO'] = pd.to_numeric(df[year_cols[0]], errors='coerce') # Convertir a numérico
     
-    if 'AÑO' in df.columns:
-        years = df['AÑO'].dropna().unique()
-        print(f"✅ Años detectados: {sorted([int(y) for y in years if not np.isnan(y)])}")
-        temporal_info['years_available'] = sorted([int(y) for y in years if not np.isnan(y)])
+    if 'AÑO' in df.columns:# Si existe columna de año
+        years = df['AÑO'].dropna().unique()# Años únicos
+        print(f"✅ Años detectados: {sorted([int(y) for y in years if not np.isnan(y)])}")# Mostrar años detectados
+        temporal_info['years_available'] = sorted([int(y) for y in years if not np.isnan(y)])# Guardar años disponibles
     else:
-        print("⚠️  No se detectó columna de año")
+        print("⚠️  No se detectó columna de año")# Advertencia si no se detecta
     
-    return df, temporal_info
+    return df, temporal_info# Retornar DataFrame y info temporal
 
 
 # ============================================================
@@ -175,94 +172,87 @@ def detect_temporal_columns(df):
 # ============================================================
 
 def generate_dictionary(df):
-    """Genera diccionario completo de datos"""
+    """Genera diccionario completo de datos""" # Genera diccionario completo de datos
     dic = pd.DataFrame({
-        "Variable": df.columns,
-        "Tipo_dato": df.dtypes.values,
-        "Valores_nulos": df.isnull().sum().values,
-        "Porcentaje_nulos": (df.isnull().sum() / len(df) * 100).round(2).values,
-        "Valores_únicos": df.nunique().values,
-        "Cardinalidad": df.nunique().values / len(df) * 100,
-        "Primer_valor": [df[col].dropna().iloc[0] if len(df[col].dropna()) > 0 else None for col in df.columns]
-    })
+        "Variable": df.columns, # Nombres de variables
+        "Tipo_dato": df.dtypes.values,# Tipos de datos
+        "Valores_nulos": df.isnull().sum().values,# Valores nulos
+        "Porcentaje_nulos": (df.isnull().sum() / len(df) * 100).round(2).values,# Porcentaje de nulos
+        "Valores_únicos": df.nunique().values,# Valores únicos
+        "Cardinalidad": df.nunique().values / len(df) * 100,# Cardinalidad
+        "Primer_valor": [df[col].dropna().iloc[0] if len(df[col].dropna()) > 0 else None for col in df.columns]# Primer valor no nulo
+    })# Crear DataFrame del diccionario
     
-    dic['Clasificación'] = dic.apply(lambda row: clasificar_variable(row, len(df)), axis=1)
+    dic['Clasificación'] = dic.apply(lambda row: clasificar_variable(row, len(df)), axis=1)# Clasificar variables
     
-    dic.to_excel(os.path.join(TABLES_DIR, "diccionario_datos.xlsx"), index=False)
-    dic.to_csv(os.path.join(TABLES_DIR, "diccionario_datos.csv"), index=False)
+    dic.to_excel(os.path.join(TABLES_DIR, "diccionario_datos.xlsx"), index=False)# Guardar en Excel
+    dic.to_csv(os.path.join(TABLES_DIR, "diccionario_datos.csv"), index=False)# Guardar en CSV
     
-    print(f"✅ Diccionario de datos generado: {len(dic)} variables documentadas")
-    return dic
+    print(f" Diccionario de datos generado: {len(dic)} variables documentadas")# Confirmar generación 
+    return dic# Retornar diccionario
 
 
 def clasificar_variable(row, n_rows):
     """Clasifica tipo de variable según sus características"""
-    if row['Porcentaje_nulos'] > 90:
-        return 'Casi_vacía'
-    elif row['Valores_únicos'] == 1:
+    if row['Porcentaje_nulos'] > 90:# Más del 90% nulos
+        return 'Casi_vacía'# Casi vacía
+    elif row['Valores_únicos'] == 1:# Solo un valor único
         return 'Constante'
-    elif row['Valores_únicos'] == n_rows:
-        return 'Identificador'
-    elif row['Valores_únicos'] <= 10:
-        return 'Categórica_baja'
-    elif row['Valores_únicos'] <= 50:
-        return 'Categórica_media'
-    elif row['Cardinalidad'] > 90:
-        return 'Alta_cardinalidad'
+    elif row['Valores_únicos'] == n_rows:# Todos los valores únicos
+        return 'Identificador'# Identificador
+    elif row['Valores_únicos'] <= 10:# Hasta 10 valores únicos
+        return 'Categórica_baja'# Categórica baja
+    elif row['Valores_únicos'] <= 50:# Hasta 50 valores únicos
+        return 'Categórica_media'# Categórica media
+    elif row['Cardinalidad'] > 90:# Más del 90% de cardinalidad
+        return 'Alta_cardinalidad'# Alta cardinalidad
     elif 'int' in str(row['Tipo_dato']) or 'float' in str(row['Tipo_dato']):
         return 'Numérica'
     else:
-        return 'Categórica_alta'
+        return 'Categórica_alta'# Categórica alta
 
 
 # ============================================================
-# 6. VERIFICACIÓN DE CALIDAD DE DATOS (Versión corregida)
+# 6. VERIFICACIÓN DE CALIDAD DE DATOS
 # ============================================================
 
 def verify_quality(df):
     """Análisis exhaustivo de calidad de datos"""
     quality = {
-        "total_filas": int(df.shape[0]),
-        "total_columnas": int(df.shape[1]),
-        "filas_duplicadas": int(df.duplicated().sum()),
-        "porcentaje_duplicados": float((df.duplicated().sum() / len(df) * 100).round(2)),
-        "promedio_nulos": float((df.isnull().mean().mean() * 100).round(2)),
-        "columnas_constantes": int(len([c for c in df.columns if df[c].nunique() == 1])),
-        "columnas_casi_vacias": int(len([c for c in df.columns if df[c].isnull().sum() / len(df) > 0.9])),
-        "memoria_mb": float((df.memory_usage(deep=True).sum() / 1024**2).round(2))
-    }
-
-    # Identificar columnas problemáticas
-    problematic = []
-    for col in df.columns:
-        issues = []
-        if df[col].nunique() == 1:
-            issues.append("constante")
-        if df[col].isnull().sum() / len(df) > 0.9:
+        "total_filas": int(df.shape[0]),# Total de filas
+        "total_columnas": int(df.shape[1]),# Total de columnas
+        "filas_duplicadas": int(df.duplicated().sum()),# Filas duplicadas
+        "porcentaje_duplicados": float((df.duplicated().sum() / len(df) * 100).round(2)),# Porcentaje de duplicados
+        "promedio_nulos": float((df.isnull().mean().mean() * 100).round(2)),# Promedio de nulos
+        "columnas_constantes": int(len([c for c in df.columns if df[c].nunique() == 1])),# Columnas constantes
+        "columnas_casi_vacias": int(len([c for c in df.columns if df[c].isnull().sum() / len(df) > 0.9])),# Columnas casi vacías
+        "memoria_mb": float((df.memory_usage(deep=True).sum() / 1024**2).round(2))# Memoria usada en MB
+    }# Crear reporte de calidad
+    
+    problematic = []# Lista de columnas problemáticas
+    for col in df.columns:# Revisar cada columna
+        issues = []# Problemas detectados
+        if df[col].nunique() == 1:# Columna constante
+            issues.append("constante")# Columna constante
+        if df[col].isnull().sum() / len(df) > 0.9:# Columna casi vacía
             issues.append("casi_vacía")
         if df[col].nunique() > len(df) * 0.95 and df[col].dtype == 'object':
             issues.append("alta_cardinalidad")
         if issues:
             problematic.append({"columna": col, "problemas": issues})
-
-    quality["columnas_problemáticas"] = problematic
-
-    # ✅ Convertir todos los valores a tipos compatibles con JSON
-    quality_serializable = {
-        k: (v.tolist() if hasattr(v, "tolist") else v)
-        for k, v in quality.items()
-    }
-
-    # Guardar en JSON y CSV
+    
+    quality['columnas_problemáticas'] = problematic
+    
     with open(os.path.join(TABLES_DIR, "quality_report.json"), "w", encoding="utf-8") as f:
-        json.dump(quality_serializable, f, indent=2, ensure_ascii=False)
-
-    pd.Series({k: v for k, v in quality_serializable.items() if not isinstance(v, list)}).to_csv(
+        json.dump(quality, f, indent=2, ensure_ascii=False)
+    
+    pd.Series({k: v for k, v in quality.items() if not isinstance(v, list)}).to_csv(
         os.path.join(TABLES_DIR, "quality_summary.csv")
-    )
-
+    )# Guardar resumen en CSV
+    
     print(f"✅ Calidad verificada: {quality['filas_duplicadas']} duplicados, {quality['columnas_constantes']} columnas constantes")
     return quality
+
 
 # ============================================================
 # 7. ANÁLISIS EXPLORATORIO AMPLIADO
@@ -288,7 +278,7 @@ def exploratory_analysis(df, dic):
                 plt.savefig(os.path.join(EXPLORATORY_DIR, f"dist_{var}.png"), dpi=150)
                 plt.close()
     
-    num_vars = df.select_dtypes(include=[np.number]).columns.tolist()
+    num_vars = df.select_dtypes(include=[np.number]).columns.tolist() 
     if num_vars:
         stats = df[num_vars].describe().T
         stats.to_excel(os.path.join(TABLES_DIR, "estadisticas_numericas.xlsx"))

@@ -1,23 +1,23 @@
-# 📊 Data Understanding - Proyecto NNA Bogotá (2021-2025)
+#  Data Understanding - Proyecto NNA Bogotá (2021-2025)
 
 Análisis exploratorio completo de intervenciones con Niños, Niñas y Adolescentes en Bogotá, incluyendo análisis espacio-temporal y de contexto social.
 
-## 🎯 Características principales
+##  Características principales
 
-- ✅ **Carga automática** de archivos Excel (.xlsx, .xls) o CSV
-- 🧹 **Limpieza y normalización** de columnas
-- 🔒 **Anonimización** de datos sensibles
-- 📖 **Diccionario de datos** completo y automático
-- 🔍 **Análisis exploratorio exhaustivo** de todas las variables
-- 📈 **Análisis espacio-temporal** con detección de tendencias
-- 💊 **Análisis de régimen de salud** y contexto social
-- 🗺️ **Identificación de zonas de alerta** por cambios significativos
-- 📊 **Visualizaciones automáticas** (gráficos, mapas de calor, correlaciones)
-- 📝 **Reportes en múltiples formatos** (Excel, CSV, JSON, Markdown)
+-  **Carga automática** de archivos Excel (.xlsx, .xls) o CSV
+-  **Limpieza y normalización** de columnas
+-  **Anonimización** de datos sensibles
+-  **Diccionario de datos** completo y automático
+-  **Análisis exploratorio exhaustivo** de todas las variables
+-  **Análisis espacio-temporal** con detección de tendencias
+-  **Análisis de régimen de salud** y contexto social
+-  **Identificación de zonas de alerta** por cambios significativos
+-  **Visualizaciones automáticas** (gráficos, mapas de calor, correlaciones)
+-  **Reportes en múltiples formatos** (Excel, CSV, JSON, Markdown)
 
 ---
 
-## 🚀 Instalación rápida
+##  Instalación rápida
 
 ```bash
 # 1. Instalar dependencias
@@ -32,7 +32,7 @@ python scripts/data_understanding.py
 
 ---
 
-## 📂 Estructura del proyecto
+##  Estructura del proyecto
 
 ```
 Analisis_EspacioTemporal_NNA_Bogota_2021_2025/
@@ -60,7 +60,7 @@ Analisis_EspacioTemporal_NNA_Bogota_2021_2025/
 
 ---
 
-## ▶️ Uso detallado
+## ▶ Uso detallado
 
 ### Configuración inicial
 
@@ -83,11 +83,11 @@ python scripts/data_understanding.py
 
 **Desde VS Code:**
 1. Abre `scripts/data_understanding.py`
-2. Presiona `F5` o click en Run ▶️
+2. Presiona `F5` o click en Run ▶
 
 ---
 
-## 📊 Resultados generados
+##  Resultados generados
 
 ### Tablas (Excel/CSV)
 - `diccionario_datos.xlsx` - Descripción completa de variables
@@ -110,7 +110,7 @@ python scripts/data_understanding.py
 
 ---
 
-## 🎯 Objetivos del análisis
+##  Objetivos del análisis
 
 1. **Describir** la distribución de intervenciones por localidad y año
 2. **Identificar** localidades con aumentos o disminuciones significativas
@@ -118,7 +118,7 @@ python scripts/data_understanding.py
 
 ---
 
-## ⚠️ Solución de problemas
+##  Solución de problemas
 
 ### Error: "No se encontró DATA_FILE"
 - Verifica que existe el archivo `.env`
@@ -133,15 +133,15 @@ python scripts/data_understanding.py
 
 ---
 
-## 📝 Notas importantes
+##  Notas importantes
 
-- ⚠️ **Privacidad**: El script anonimiza automáticamente datos sensibles
-- ⏱️ **Tiempo**: Archivos grandes pueden tardar varios minutos
-- 💾 **Espacio**: Reserva ~500MB para reportes y figuras
+-  **Privacidad**: El script anonimiza automáticamente datos sensibles
+-  **Tiempo**: Archivos grandes pueden tardar varios minutos
+-  **Espacio**: Reserva ~500MB para reportes y figuras
 
 ---
 
-## 📧 Contacto
+##  Contacto
 
 Para dudas o problemas, revisar la documentación en el código fuente.
 
