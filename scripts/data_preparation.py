@@ -227,34 +227,48 @@ def log(message):
 
 
 # ============================================================
-# PASO 1: CONFIGURACIÓN Y CARGA DE DATOS
+# PASO 1: CONFIGURACIÓN Y CARGA DE DATOS (Integrado con Understanding)
 # ============================================================
 
 def paso1_cargar_datos():
-    """Carga inicial de datos"""
+    """Carga inicial de datos y sincronización con Data Understanding"""
     log("\n PASO 1: Configuración y carga de datos")
     log("-"*70)
     
-    ext = os.path.splitext(file_path)[-1].lower() # Extensión del archivo
-    
+    ext = os.path.splitext(file_path)[-1].lower()
     log(f" Cargando archivo: {os.path.basename(file_path)}")
-    
+
     if ext in ['.xlsx', '.xls']:
-        xls = pd.ExcelFile(file_path) #
-        log(f"   Hojas disponibles: {xls.sheet_names}") 
-        sheet = 'BD' if 'BD' in xls.sheet_names else xls.sheet_names[-1] 
-        df = pd.read_excel(file_path, sheet_name=sheet) 
-        log(f"   ✓ Cargada hoja: {sheet}") 
+        xls = pd.ExcelFile(file_path)
+        sheet = 'BD' if 'BD' in xls.sheet_names else xls.sheet_names[-1]
+        df = pd.read_excel(file_path, sheet_name=sheet)
+        log(f"   ✓ Hoja cargada: {sheet}")
     elif ext == '.csv':
-        df = pd.read_csv(file_path, sep=None, engine='python', encoding='utf-8') 
-        log(f"   ✓ CSV cargado") 
+        df = pd.read_csv(file_path, sep=None, engine='python', encoding='utf-8')
+        log("   ✓ CSV cargado")
     else:
-        raise ValueError(" Formato no compatible") 
-    
-    log(f" Datos cargados: {df.shape[0]:,} filas × {df.shape[1]} columnas") 
-    log(f"   Memoria utilizada: {df.memory_usage(deep=True).sum() / 1024**2:.2f} MB") 
-    
-    return df 
+        raise ValueError("Formato no compatible")
+
+    log(f"   Dimensiones: {df.shape[0]:,} filas × {df.shape[1]} columnas")
+    log(f"   Memoria utilizada: {df.memory_usage(deep=True).sum() / 1024**2:.2f} MB")
+
+    # ------------------------------------------------------------
+    # 🔗 Integrar configuración desde Data Understanding
+    # ------------------------------------------------------------
+    understanding_config = os.path.join(BASE_DIR, "reports", "understanding", "config_understanding.json")
+    global CODIGOS_VALIDOS
+
+    if os.path.exists(understanding_config):
+        with open(understanding_config, "r", encoding="utf-8") as f:
+            config = json.load(f)
+        CODIGOS_VALIDOS = config.get("codigos_validos", ["99999"])
+        log(f"   ✓ Configuración importada desde: config_understanding.json")
+        log(f"     Códigos válidos reconocidos: {CODIGOS_VALIDOS}")
+    else:
+        CODIGOS_VALIDOS = ["99999"]
+        log("   ⚠️ No se encontró configuración de Understanding. Se usará 99999 por defecto.")
+
+    return df
 
 
 # ============================================================
@@ -334,121 +348,131 @@ def paso3_eliminar_pii(df):
 
 
 # ============================================================
-# PASO 4: LIMPIEZA DE INCONSISTENCIAS
+# PASO 4: Limpieza de inconsistencias (alineado con Data Understanding)
 # ============================================================
 
 def paso4_limpiar_inconsistencias(df):
-    """Limpia inconsistencias en los datos"""
+    """Limpieza general sin alterar los códigos válidos (como 99999)"""
     log("\n PASO 4: Limpieza de inconsistencias")
     log("-"*70)
-    
-    inconsistencias_corregidas = 0
-    
-    # 4.1 Limpiar texto en columnas categóricas
-    text_cols = df.select_dtypes(include=['object']).columns
-    
+
+    # Solo operar sobre columnas que son texto (tipo object o string)
+    text_cols = df.select_dtypes(include=['object', 'string']).columns.tolist()
+    log(f"   Columnas de texto detectadas: {len(text_cols)}")
+
     for col in text_cols:
-        # Eliminar espacios extra y convertir a string
-        df[col] = df[col].astype(str).str.strip()
-        df[col] = df[col].str.replace(r'\s+', ' ', regex=True)
-        
-        # Reemplazar valores como 'nan', 'None', '' por NaN real
-        df[col] = df[col].replace(['nan', 'None', '', 'null', 'NULL', 'NA'], np.nan)
-    
-    log(f"   ✓ Texto limpiado en {len(text_cols)} columnas")
-    
-    # 4.2 Estandarizar fechas
-    date_cols = [c for c in df.columns if 'FECHA' in c]
+        # Limpiar espacios en blanco solo en celdas que son realmente texto
+        df[col] = df[col].apply(
+            lambda x: re.sub(r'\s+', ' ', x.strip()) if isinstance(x, str) else x
+        )
+        # Reemplazar cadenas vacías o nulos mal escritos por NaN
+        df[col] = df[col].replace(
+            ['nan', 'None', 'NULL', '', 'N/A', 'NA', 'n/a', 'na'], np.nan
+        )
+
+    # Limpieza de fechas: intentar convertir sin tocar 99999
+    date_cols = [c for c in df.columns if 'FECHA' in c.upper()]
     for col in date_cols:
-        if df[col].dtype != 'datetime64[ns]':
-            try:
-                df[col] = pd.to_datetime(df[col], errors='coerce')
-                log(f"   ✓ Fecha estandarizada: {col}")
-            except:
-                log(f"     No se pudo convertir: {col}")
-    
-    # 4.3 Eliminar duplicados completos
-    duplicados_antes = df.duplicated().sum()
-    if duplicados_antes > 0:
+        try:
+            df[col] = pd.to_datetime(df[col], errors='coerce')
+            log(f"   ✓ Fecha estandarizada: {col}")
+        except Exception:
+            log(f"   ⚠ No se pudo convertir: {col}")
+
+    # Eliminar duplicados completos
+    duplicates = df.duplicated().sum()
+    if duplicates > 0:
         df = df.drop_duplicates()
-        log(f"   ✓ Duplicados eliminados: {duplicados_antes}")
+        log(f"   ✓ Duplicados eliminados: {duplicates}")
     else:
-        log(f"   ✓ No se encontraron duplicados completos")
-    
-    # 4.4 Estandarizar categorías comunes
-    categorias_estandar = {
-        'SI': ['Si', 'si', 'SI', 'sí', 'Sí', 's', 'S', '1', 1],
-        'NO': ['No', 'no', 'NO', 'n', 'N', '0', 0],
-        '99999': ['99999', '99.999', 'No aplica', 'NO APLICA', 'N/A', 'NA']
+        log("   ✓ No se encontraron duplicados completos")
+
+    # Normalizar variables categóricas comunes
+    cat_estandar = {
+        'SI': ['Si', 'sí', 'Sí', 'si', 'S', 's', 1],
+        'NO': ['No', 'no', 'N', 'n', 0]
     }
-    
+
     for col in text_cols:
-        if df[col].nunique() < 20:  # Solo para columnas con pocas categorías
-            for estandar, variantes in categorias_estandar.items():
-                df[col] = df[col].replace(variantes, estandar)
-    
-    log(f" Limpieza de inconsistencias completada")
-    
+        if df[col].nunique(dropna=True) < 25:
+            for val, variants in cat_estandar.items():
+                df[col] = df[col].replace(variants, val)
+
+    log("   ✓ Limpieza de inconsistencias completada correctamente (manteniendo 99999)")
     return df
 
 
 # ============================================================
-# PASO 5: MANEJO DE VALORES FALTANTES
+# PASO 5: MANEJO DE VALORES FALTANTES (manteniendo 99999)
 # ============================================================
 
 def paso5_manejar_faltantes(df):
-    """Analiza y maneja valores faltantes"""
-    log("\n⚙️  PASO 5: Manejo de valores faltantes")
+    """Genera reportes de nulos reales y de códigos válidos (ej. 99999).
+    Cuenta tanto la forma numérica como la string del código válido."""
+    log("\n PASO 5: Manejo de valores faltantes")
     log("-"*70)
-    
-    # Calcular porcentaje de nulos por columna
-    nulos = df.isnull().sum()
-    pct_nulos = (nulos / len(df) * 100).round(2)
-    
-    reporte_nulos = pd.DataFrame({
-        'Variable': df.columns,
-        'Nulos': nulos.values,
-        'Porcentaje': pct_nulos.values
-    }).sort_values('Porcentaje', ascending=False)
-    
-    reporte_nulos.to_excel(os.path.join(PREP_REPORTS_DIR, "reporte_nulos.xlsx"), index=False)
-    
-    # Columnas con muchos nulos (>90%)
-    cols_muy_nulas = reporte_nulos[reporte_nulos['Porcentaje'] > 90]['Variable'].tolist()
-    
-    if cols_muy_nulas:
-        log(f"     Columnas con >90% nulos: {len(cols_muy_nulas)}")
-        log(f"   Considerar eliminar: {', '.join(cols_muy_nulas[:5])}...")
-        
-        # Opcional: eliminar columnas casi vacías
-        # df = df.drop(columns=cols_muy_nulas)
-        # log(f"   ✓ Eliminadas {len(cols_muy_nulas)} columnas casi vacías")
-    
-    # Imputación de valores para columnas clave
-    # Ejemplo: rellenar categóricas con "No especificado"
-    cat_cols = df.select_dtypes(include=['object']).columns
-    for col in cat_cols:
-        if df[col].isnull().sum() > 0 and df[col].isnull().sum() / len(df) < 0.5:
-            df[col] = df[col].fillna('No especificado')
-    
-    # Gráfico de valores faltantes
-    top_nulos = reporte_nulos.head(20)
-    if top_nulos['Porcentaje'].max() > 0:
-        plt.figure(figsize=(10, 8))
-        plt.barh(top_nulos['Variable'], top_nulos['Porcentaje'], color='coral')
-        plt.xlabel('Porcentaje de valores faltantes (%)')
-        plt.title('Top 20 variables con mayor porcentaje de valores faltantes')
-        plt.tight_layout()
-        plt.savefig(os.path.join(PREP_FIGURES_DIR, "valores_faltantes.png"), dpi=150)
-        plt.close()
-        log(f"   ✓ Gráfico de valores faltantes guardado")
-    
-    log(f" Análisis de valores faltantes completado")
-    log(f"   Promedio general de nulos: {pct_nulos.mean():.2f}%")
-    
+
+    tables_dir = os.path.join(PREP_REPORTS_DIR, 'tables')
+    figures_dir = os.path.join(PREP_REPORTS_DIR, 'figures')
+    os.makedirs(tables_dir, exist_ok=True)
+    os.makedirs(figures_dir, exist_ok=True)
+
+    # --- Definir códigos válidos a considerar (por defecto 99999) ---
+    # Si exportaste configuración desde data_understanding, CODIGOS_VALIDOS ya debería existir.
+    try:
+        codigos = CODIGOS_VALIDOS
+    except NameError:
+        codigos = ["99999"]
+
+    # --- Crear una copia temporal donde reemplazamos los códigos válidos por NaN
+    temp = df.copy()
+
+    for code in codigos:
+        # reemplazar tanto la forma numérica como la string
+        temp.replace([code, str(code)], np.nan, inplace=True)
+
+    # --- Reporte de nulos reales (ahora sin contar códigos válidos) ---
+    missing_report = temp.isnull().sum().reset_index()
+    missing_report.columns = ['Variable', 'Nulos']
+    missing_report['Porcentaje'] = (missing_report['Nulos'] / len(df) * 100).round(6)
+    missing_report = missing_report.sort_values(by='Porcentaje', ascending=False)
+    missing_report.to_excel(os.path.join(tables_dir, 'reporte_nulos.xlsx'), index=False)
+    log("   ✓ Reporte de nulos reales generado (reporte_nulos.xlsx)")
+
+    # Columnas con >90% de nulos reales
+    high_missing = missing_report[missing_report['Porcentaje'] > 90]
+    if not high_missing.empty:
+        log(f"     Columnas con >90% nulos reales: {len(high_missing)}")
+        log(f"   Considerar: {', '.join(high_missing['Variable'].tolist()[:10])}...")
+
+    # --- Reporte de frecuencias para cada código válido (ej. 99999) ---
+    for code in codigos:
+        freq_series = df.apply(lambda col: ((col == code) | (col == str(code))).sum())
+        report_code = freq_series.reset_index()
+        report_code.columns = ['Variable', f'Frecuencia_{code}']
+        report_code = report_code[report_code[f'Frecuencia_{code}'] > 0].sort_values(by=f'Frecuencia_{code}', ascending=False)
+        out_path = os.path.join(tables_dir, f'reporte_{code}.xlsx')
+        report_code.to_excel(out_path, index=False)
+        log(f"   ✓ Reporte de frecuencias '{code}' generado ({out_path})")
+
+    # --- Resumen global de faltantes reales ---
+    total_missing = int(missing_report['Nulos'].sum())
+    missing_pct = (total_missing / (len(df) * len(df.columns))) * 100
+    log(f"   Total de valores faltantes reales en la base: {total_missing:,}")
+    log(f"   Porcentaje global de faltantes reales: {missing_pct:.2f}%")
+
+    # --- Gráfico (distribución de % nulos reales) ---
+    plt.figure(figsize=(10, 5))
+    sns.histplot(missing_report['Porcentaje'].clip(0,100), bins=30)
+    plt.title("Distribución de % de valores faltantes reales (sin códigos válidos)")
+    plt.xlabel("% valores faltantes reales")
+    plt.ylabel("Frecuencia")
+    plt.tight_layout()
+    plt.savefig(os.path.join(figures_dir, 'faltantes_distribucion.png'))
+    plt.close()
+    log("   ✓ Gráfico de distribución de nulos guardado")
+
     return df
-
-
 # ============================================================
 # PASO 6: ANÁLISIS EXPLORATORIO INICIAL (EDA)
 # ============================================================
@@ -501,7 +525,7 @@ def paso6_eda_inicial(df):
             plt.close()
             log(f"   ✓ Distribución temporal generada")
     
-    log(f" Análisis exploratorio inicial completado")
+    log(f" Análisis exploratorio inicial completado (sin excluir '99999')")
     
     return df
 
