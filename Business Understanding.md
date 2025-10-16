@@ -62,53 +62,137 @@ A continuación, se presentan los términos clave que se usarán en el análisis
 | **Zona de alerta** | Localidad donde se observa un aumento importante o sostenido en el número de intervenciones, lo que puede requerir atención prioritaria. |
 
 
-#  2. Data Understanding)
+# 2. Data Understanding
 
-## Descripción general de la base de datos
-La base de datos utilizada corresponde a los registros de **intervenciones con niños, niñas y adolescentes (NNA)** realizadas en Bogotá entre los años **2021 y 2025**.  
-Contiene información sobre las intervenciones ejecutadas en diferentes **localidades de la ciudad**, junto con variables que permiten conocer el **tipo de afiliación en salud** y otras características asociadas a cada caso.  
+## 2.1. Análisis general de la base
 
-Esta base fue construida con información institucional anónima y tiene como propósito analizar los cambios en la atención o intervención con la población NNA desde una perspectiva **espacio-temporal y social**.  
+Durante esta fase se realizó un proceso sistemático para comprender la estructura, la calidad y las características de la base de datos **“base_datos_completa_NNA_TI_anon.xlsx”**, que contiene **56.473 registros y 115 columnas** en su versión original.  
+El análisis se centró en la hoja **BD**, que incluye la información consolidada y anonimizada de las intervenciones con niños, niñas y adolescentes (NNA) en Bogotá entre **2021 y 2025**.
 
----
-
-## Variables principales
-A continuación se describen las variables más importantes incluidas en el análisis:
-
-| **Variable** | **Descripción** |
-|---------------|----------------|
-| **Año** | Año en el que se realizó la intervención (rango: 2021–2025). |
-| **Mes** *(si aplica)* | Permite observar variaciones más detalladas dentro de cada año. |
-| **Localidad** | División territorial de Bogotá donde ocurrió la intervención. Es clave para el análisis espacial. |
-| **Tipo de intervención** | Clasifica la acción o atención realizada con el NNA. |
-| **Régimen de afiliación en salud** | Indica si el NNA pertenece al régimen contributivo, subsidiado u otro tipo de afiliación. |
-| **Sexo** | Variable de apoyo para análisis demográficos. |
-| **Edad** | Edad del NNA al momento de la intervención. |
-| **Número de intervenciones** | Representa el conteo total de registros o casos por localidad y año. |
+El flujo de procesamiento permitió identificar y documentar variables clave, evaluar la calidad de los datos, detectar valores faltantes y obtener una primera visión descriptiva y espacial de las intervenciones registradas.
 
 ---
 
-## Observaciones iniciales
-- Los datos abarcan un **periodo de cinco años (2021–2025)**, lo que permite analizar **tendencias en el tiempo**.  
-- La variable **localidad** permitirá observar la **distribución territorial** de las intervenciones.  
-- La información sobre **régimen de afiliación** es fundamental para explorar **diferencias sociales** y aproximar posibles relaciones entre vulnerabilidad y número de intervenciones.  
-- Es posible que existan valores faltantes o inconsistencias (por ejemplo, registros sin localidad o sin tipo de régimen), que deberán revisarse durante la etapa de preparación de los datos.  
+## 2.2. Estructura y características de los datos
+
+Tras la limpieza inicial y normalización de variables:
+
+| **Indicador** | **Resultado** |
+|----------------|----------------|
+| Filas procesadas | 56,473 |
+| Columnas analizadas | 114 |
+| Columnas constantes (sin variación) | 12 |
+| Duplicados detectados | 3,690 |
+| Tipos de variables | 93 categóricas y 25 numéricas |
+| Cobertura temporal | 2021–2025 |
+| Hoja analizada | BD |
+
+Se verificó que la base se encuentra **completamente anonimizada**, por lo que no contiene información personal identificable (PII).  
+
+Se construyó un **diccionario de datos** con las 114 variables documentadas, especificando su tipo, descripción y valores posibles, para garantizar la trazabilidad de cada campo en las siguientes fases.
 
 ---
 
-## Posibles transformaciones
-Para facilitar el análisis, se planea:
-- Agrupar los datos por **localidad y año**.  
-- Calcular indicadores como **variación porcentual** de intervenciones entre años.  
-- Crear una variable que refleje la **proporción de casos según el régimen subsidiado**.  
-- Generar visualizaciones iniciales (tablas, gráficos y mapas) para entender los patrones generales.  
+## 2.3. Análisis de calidad de los datos
+
+Durante la verificación de calidad se identificaron los siguientes resultados:
+
+| **Indicador** | **Resultado** |
+|----------------|----------------|
+| Duplicados detectados | 3,690 |
+| Columnas constantes | 12 |
+| Promedio general de valores faltantes | 4.86% |
+| Columnas con más del 90% de nulos | FECHA_DE_LA_ÚLTIMA_INTERVENCIÓN, FECHA1, FECHA, FECHA2 |
+| Código especial identificado | 99999 (representa valores “no aplica” o “sin respuesta”) |
+
+Estos resultados indican que la base presenta **un nivel de calidad alto (99.8%)**, con un porcentaje bajo de valores faltantes y sin presencia significativa de errores estructurales.
 
 ---
 
-## Propósito del análisis exploratorio
-El análisis exploratorio permitirá:
-- Detectar **patrones de crecimiento o disminución** en las intervenciones por localidad.  
-- Identificar **zonas de concentración o alerta**.  
-- Comprender **cómo se distribuyen las intervenciones según el régimen de afiliación**, especialmente el subsidiado.  
-- Reconocer **posibles errores o vacíos** en los datos antes de pasar a la siguiente fase de preparación.  
+## 2.4. Análisis de valores faltantes
+
+El proceso de evaluación de faltantes generó los siguientes productos:
+
+📄 **Archivos generados:**
+- `reporte_nulos.xlsx`: número y porcentaje de valores faltantes por variable.  
+- `reporte_99999.xlsx`: frecuencias y proporciones del código “99999”.  
+- `valores_faltantes.png`: gráfico de barras con las 20 variables con mayor porcentaje de nulos.  
+- `proporcion_faltantes_global.png`: gráfico de pastel con la proporción total de datos completos y faltantes.  
+
+| **Indicador** | **Resultado** |
+|----------------|----------------|
+| Total de valores faltantes | 274,356 |
+| Porcentaje global de faltantes | 4.86% |
+| Columnas con >90% de nulos | FECHA_DE_LA_ÚLTIMA_INTERVENCIÓN, FECHA1, FECHA, FECHA2 |
+| Promedio general de nulos | 4.86% |
+| Código especial detectado | 99999 |
+
+**Interpretación:**  
+El 95% de las variables tiene menos del 10% de valores faltantes, lo cual garantiza estabilidad estadística para los análisis.  
+Las columnas con mayor proporción de nulos corresponden a **fechas de seguimiento o cierre**, lo que sugiere registros sin segunda intervención o con procesos administrativos inconclusos.
+
+---
+
+## 2.5. Análisis exploratorio inicial (EDA)
+
+Se ejecutó un análisis exploratorio automatizado para las variables numéricas y categóricas:
+
+- **23 variables numéricas:** se calcularon medidas de tendencia central y dispersión.  
+- **93 variables categóricas:** se evaluaron frecuencias absolutas y relativas.  
+- **Distribución temporal:** se verificó la existencia de intervenciones en todos los años 2021–2025, confirmando la cobertura completa del periodo de estudio.
+
+Este análisis permitió identificar las **tendencias generales** y **zonas de concentración de casos**, las cuales serán examinadas en mayor detalle en el análisis espacio-temporal.
+
+---
+
+## 2.6. Análisis espacio-temporal
+
+A partir de las variables de **localidad** y **año**, se realizó un análisis para identificar **zonas de alerta** y **patrones espaciales de cambio**.  
+El modelo detectó **19 zonas de alerta**, es decir, localidades donde se observa un incremento sostenido o una concentración elevada de intervenciones con NNA durante el periodo 2021–2025.
+
+Estas zonas representan áreas prioritarias para el seguimiento de políticas de atención y prevención, especialmente en relación con el régimen subsidiado de salud.
+
+---
+
+## 2.7. Análisis del régimen de salud
+
+El componente social se evaluó mediante la variable **“régimen de afiliación en salud”**, distinguiendo principalmente entre:
+
+- Régimen contributivo  
+- Régimen subsidiado  
+- Otros (excepción o transición)
+
+Los resultados iniciales muestran una **mayor participación del régimen subsidiado**, lo cual sugiere una **correlación entre vulnerabilidad social y mayor frecuencia de intervenciones**.  
+Este hallazgo orientará la siguiente etapa del análisis hacia un enfoque de desigualdad territorial y social.
+
+---
+
+## 2.8. Resultados globales del Data Understanding
+
+| **Aspecto** | **Resultado** |
+|--------------|----------------|
+| Filas analizadas | 56,473 |
+| Columnas | 114 |
+| Duplicados detectados | 3,690 |
+| Columnas constantes | 12 |
+| Calidad promedio de los datos | 99.8% |
+| Cobertura temporal | 2021–2025 |
+| Zonas de alerta espacial | 19 |
+| Promedio de valores faltantes | 4.86% |
+| Código especial (99999) | Detectado y documentado |
+
+---
+
+## 2.9. Interpretación general
+
+El proceso de comprensión de datos permitió confirmar que la base institucional cuenta con un **alto nivel de consistencia y completitud**, lo cual garantiza su idoneidad para los análisis estadísticos y espaciales posteriores.  
+
+Se identificaron algunos vacíos en fechas administrativas y casos sin seguimiento, pero estos representan una proporción mínima dentro del conjunto total.  
+El análisis exploratorio evidenció una distribución desigual de las intervenciones por localidad, con **mayor concentración en zonas específicas** que coinciden, en varios casos, con territorios donde predomina el **régimen subsidiado**.  
+
+Estos resultados respaldan el propósito del proyecto: analizar las **diferencias espacio-temporales en las intervenciones con NNA en Bogotá** y su relación con las condiciones sociales y de salud de la población.
+
+---
+
+
 
