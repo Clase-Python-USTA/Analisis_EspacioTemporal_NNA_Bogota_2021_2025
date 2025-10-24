@@ -98,80 +98,114 @@ plt.rcParams.update({
 
 # ------------------ HELP: nota metodológica ------------------
 def agregar_nota(fig):
-    nota = (f"Nota metodológica: Se está graficando el {pct_used:.1f}% de la base original "
+    nota = (f"Nota metodológica: Se está graficando el 48.0 % del total inicial / 72.3 % de la base limpia "
             f"({ORIGINAL_ROWS:,} registros, {ORIGINAL_COLS} columnas).")
     fig.text(0.98, 0.02, nota, ha='right', va='bottom', fontsize=9, style='italic',
              bbox=dict(boxstyle='round,pad=0.4', facecolor='white', edgecolor='lightgray', alpha=0.95))
 
-# ------------------ 1) BARRAS VERTICALES: Intervenciones por Año y Régimen ------------------
+# ------------------ 1) BARRAS VERTICALES: Intervenciones por Año y Régimen (ajustada) ------------------
 df_bar = df.groupby([fecha_col, af_col]).size().reset_index(name="Intervenciones")
 
 fig, ax = plt.subplots(figsize=(12, 7))
-# barras separadas (dodge=True en seaborn y establecer order de años para asegurar orden)
-sns.barplot(data=df_bar, x=fecha_col, y="Intervenciones", hue=af_col,
-            palette=PALETA_REGIMEN, dodge=True, ci=None, ax=ax)
 
-# Calcular porcentajes relativos al total graficado (used_rows)
+sns.barplot(
+    data=df_bar,
+    x=fecha_col, y="Intervenciones", hue=af_col,
+    palette=PALETA_REGIMEN, dodge=True, ci=None, ax=ax
+)
+
+# Calcular porcentajes relativos al total graficado
 total_graficado = used_rows if used_rows > 0 else df_bar["Intervenciones"].sum()
 
-# Anotar absolutas + % sobre cada barra
+# Anotar valores y porcentajes
 for p in ax.patches:
     h = p.get_height()
     if h <= 0:
         continue
-    # posicion x central de la barra
     x = p.get_x() + p.get_width() / 2
     y = h
     pct = h / total_graficado * 100
-    ax.text(x, y + total_graficado * 0.005, f"{int(h):,}\n({pct:.1f}%)",
-            ha='center', va='bottom', fontsize=9, color='black')
+    ax.text(
+        x, y + total_graficado * 0.005,
+        f"{int(h):,}\n({pct:.1f}%)",
+        ha='center', va='bottom', fontsize=9, color='black'
+    )
 
-ax.set_title("INTERVENCIONES POR AÑO Y RÉGIMEN", fontsize=16, weight='bold')
+# 🔧 Ajuste del título (espacio adicional)
+ax.set_title("INTERVENCIONES POR AÑO Y RÉGIMEN", fontsize=16, weight='bold', pad=25)
+
 ax.set_xlabel("AÑO", fontsize=12)
 ax.set_ylabel("Número de intervenciones", fontsize=12)
 ax.set_xticks(range(len(YEARS)))
 ax.set_xticklabels([str(y) for y in YEARS])
 ax.legend(title="Régimen", bbox_to_anchor=(1.02, 1), loc="upper left")
+
+# Nota metodológica
 agregar_nota(fig)
+
+# 🧩 Ajuste fino de márgenes: un poco más de aire arriba
 plt.tight_layout()
+plt.subplots_adjust(top=0.90)
+
 plt.savefig(os.path.join(FIGS_DIR, "01_barras_verticales_año_regimen.png"), dpi=300)
 plt.close()
 
-# ------------------ 2) DONUT: Distribución por régimen (compacto, etiquetas alrededor) ------------------
+# ------------------ 2) DONUT: Distribución por régimen (versión final corregida) ------------------
 df_donut = df[af_col].value_counts().reset_index()
 df_donut.columns = ["Régimen", "Casos"]
 sizes = df_donut["Casos"].values
 colors = PALETA_REGIMEN[:len(sizes)]
 
-fig, ax = plt.subplots(figsize=(6.5, 6.5))
-wedges, texts = ax.pie(sizes, wedgeprops=dict(width=0.34), startangle=90, colors=colors, normalize=True)
+total_graficado = df_donut["Casos"].sum()
+
+fig, ax = plt.subplots(figsize=(8, 6))
+
+# Gráfico de dona
+wedges, _ = ax.pie(
+    sizes,
+    wedgeprops=dict(width=0.35, edgecolor='white'),
+    startangle=90,
+    colors=colors,
+    normalize=True
+)
+
+# Título
+ax.set_title(
+    "Distribución de intervenciones por régimen",
+    fontsize=16,
+    weight='bold',
+    pad=20
+)
 ax.set(aspect="equal")
-ax.set_title("Distribución de intervenciones por régimen", fontsize=16, weight='bold')
 
-# Añadir porcentajes con flecha desde etiqueta a porción (alrededor)
-for i, w in enumerate(wedges):
-    ang = (w.theta2 + w.theta1) / 2.0
-    # punto cercano al borde interior del anillo
-    x = np.cos(np.deg2rad(ang)) * 0.68
-    y = np.sin(np.deg2rad(ang)) * 0.68
-    # etiqueta exterior
-    xa = np.cos(np.deg2rad(ang)) * 1.18
-    ya = np.sin(np.deg2rad(ang)) * 1.18
-    pct = df_donut.iloc[i]["Casos"] / total_graficado * 100  # % respecto al total graficado
-    label = f"{pct:.1f}%"
-    ax.annotate(label, xy=(x, y), xytext=(xa, ya),
-                arrowprops=dict(arrowstyle="-", lw=0.8, color='gray'),
-                ha='center', va='center',
-                bbox=dict(boxstyle='round,pad=0.3', fc='white', ec='gray', lw=0.6),
-                fontsize=10)
+# ✅ Leyenda ajustada (ya no se corta)
+legend_labels = [
+    f"{r} — {c:,} ({c/total_graficado*100:.1f}%)"
+    for r, c in zip(df_donut["Régimen"], df_donut["Casos"])
+]
+ax.legend(
+    wedges,
+    legend_labels,
+    title="Régimen",
+    bbox_to_anchor=(1.05, 0.5),  # deja suficiente espacio
+    loc="center left",
+    fontsize=9,
+    title_fontsize=10,
+    frameon=False
+)
 
-# Leyenda compacta a la derecha
-legend_labels = [f"{r} — {c:,} ({c/total_graficado*100:.1f}%)" for r, c in zip(df_donut["Régimen"], df_donut["Casos"])]
-ax.legend(wedges, legend_labels, title="Régimen", bbox_to_anchor=(1.02, 0.5), loc="center left", fontsize=9)
+# Nota metodológica
 agregar_nota(fig)
-plt.tight_layout()
-plt.savefig(os.path.join(FIGS_DIR, "02_donut_regimen.png"), dpi=300)
+
+# 🧩 Ajustes de espaciado: centrado más a la izquierda pero con aire a la derecha
+plt.subplots_adjust(left=0.05, right=0.88, top=0.87, bottom=0.12)
+
+# 🔒 Evita que tight_layout recorte la leyenda
+plt.tight_layout(rect=[0, 0, 0.90, 1])
+
+plt.savefig(os.path.join(FIGS_DIR, "02_donut_regimen.png"), dpi=300, bbox_inches="tight")
 plt.close()
+
 
 # ------------------ 3) BOXPLOT: Distribución por régimen (por localidad) + etiquetas Med, Q1, Q3, Mean ------------------
 df_box = df.groupby([af_col, loc_col]).size().reset_index(name="Intervenciones")
@@ -301,3 +335,72 @@ plt.savefig(os.path.join(FIGS_DIR, "07_top10_localidades_barras_horiz.png"), dpi
 plt.close()
 
 print("\n✅ Se generaron las 7 gráficas en:", FIGS_DIR)
+
+# ============================================================
+# 🔹 BLOQUE FINAL: RESUMEN TEXTUAL DE DATOS GRAFICADOS
+# ============================================================
+
+print("\n" + "="*90)
+print("📊 RESUMEN TEXTUAL DE LOS DATOS GRAFICADOS (2021–2024)")
+print("="*90)
+
+# 1️⃣ BARRAS VERTICALES: Intervenciones por Año y Régimen
+print("\n1️⃣ INTERVENCIONES POR AÑO Y RÉGIMEN")
+tabla1 = df_bar.pivot(index=fecha_col, columns=af_col, values="Intervenciones").fillna(0)
+tabla1["Total_Año"] = tabla1.sum(axis=1)
+tabla1.loc["TOTAL"] = tabla1.sum()
+print(tabla1.astype(int).to_string())
+
+totales_por_regimen = tabla1.loc["TOTAL"].drop("Total_Año")
+for r, val in totales_por_regimen.items():
+    pct = val / totales_por_regimen.sum() * 100 if totales_por_regimen.sum() > 0 else 0
+    print(f"   ▪ {r}: {val:,} ({pct:.1f}%) del total graficado")
+
+# 2️⃣ DONUT: Distribución por régimen
+print("\n2️⃣ DISTRIBUCIÓN POR RÉGIMEN (Donut)")
+print(df_donut.to_string(index=False))
+for i, row in df_donut.iterrows():
+    pct = row["Casos"] / total_graficado * 100
+    print(f"   ▪ {row['Régimen']}: {row['Casos']:,} casos ({pct:.1f}%)")
+
+# 3️⃣ BOXPLOT: Distribución por régimen (por localidad)
+print("\n3️⃣ DISTRIBUCIÓN DE INTERVENCIONES POR RÉGIMEN Y LOCALIDAD (Boxplot)")
+df_box_sum = df_box.groupby(af_col)["Intervenciones"].agg(['count', 'mean', 'median', 'min', 'max']).round(2)
+print(df_box_sum.to_string())
+for r, fila in df_box_sum.iterrows():
+    print(f"   ▪ {r}: {int(fila['count'])} localidades, media {fila['mean']:.1f}, mediana {fila['median']:.1f}")
+
+# 4️⃣ SERIE TEMPORAL: Top 10 localidades
+print("\n4️⃣ EVOLUCIÓN DE INTERVENCIONES POR LOCALIDAD (Top 10)")
+print(pivot.astype(int).to_string())
+for loc in top10_loc:
+    total_loc = pivot[loc].sum()
+    pct = total_loc / pivot.sum().sum() * 100 if pivot.sum().sum() > 0 else 0
+    print(f"   ▪ {loc}: {total_loc:,} ({pct:.1f}%) del total graficado")
+
+# 5️⃣ HEATMAP: Régimen × Año
+print("\n5️⃣ HEATMAP RÉGIMEN × AÑO")
+print(tabla1.astype(int).to_string())
+for r in tabla1.index[:-1]:
+    total_reg = tabla1.loc[r, "Total_Año"]
+    pct = total_reg / tabla1.loc["TOTAL", "Total_Año"] * 100 if tabla1.loc["TOTAL", "Total_Año"] > 0 else 0
+    print(f"   ▪ {r}: {total_reg:,} intervenciones ({pct:.1f}%)")
+
+# 6️⃣ HEATMAP: Localidad × Año (Top 15)
+print("\n6️⃣ HEATMAP LOCALIDAD × AÑO (Top 15)")
+print(tabla2.astype(int).to_string())
+total_localidades = tabla2.sum(axis=1)
+suma_total = total_localidades.sum()
+for loc, val in total_localidades.items():
+    pct = val / suma_total * 100 if suma_total > 0 else 0
+    print(f"   ▪ {loc}: {val:,} ({pct:.1f}%) del total de Top 15")
+
+# 7️⃣ TOP 10 LOCALIDADES: Barras horizontales
+print("\n7️⃣ TOP 10 LOCALIDADES CON MÁS INTERVENCIONES")
+print(top10.to_string(index=False))
+for _, fila in top10.iterrows():
+    pct = fila["Intervenciones"] / top10_total * 100 if top10_total > 0 else 0
+    print(f"   ▪ {fila['Localidad']}: {int(fila['Intervenciones']):,} ({pct:.1f}%)")
+
+print("\n✅ FIN DEL RESUMEN TEXTUAL. TODAS LAS CIFRAS CORRESPONDEN A LOS DATOS GRAFICADOS.")
+print("="*90 + "\n")
