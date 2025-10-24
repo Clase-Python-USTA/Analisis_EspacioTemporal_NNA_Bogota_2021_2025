@@ -18,237 +18,6 @@ warnings.filterwarnings('ignore')# Ignorar advertencias innecesarias
 sns.set_style("whitegrid")# Estilo de gráficos
 
 
-"""
-============================================================
-RESUMEN EJECUTIVO DEL SCRIPT - DATA UNDERSTANDING
-Proyecto: NNA Bogotá (2021-2025)
-============================================================
-
- PROPÓSITO GENERAL:
-Este script automatiza la fase de "Data Understanding" (Comprensión de Datos) 
-de la metodología CRISP-DM para analizar intervenciones con Niños, Niñas y 
-Adolescentes en Bogotá durante 2021-2025.
-
- OBJETIVOS PRINCIPALES:
-1. Cargar y explorar datos de intervenciones con NNA
-2. Analizar tendencias espacio-temporales por localidad
-3. Identificar zonas de alerta con cambios significativos (>20%)
-4. Estudiar la relación con el régimen de afiliación en salud (subsidiado)
-5. Generar reportes automáticos y visualizaciones
-
-============================================================
- ESTRUCTURA DEL SCRIPT (11 PASOS)
-============================================================
-
-1️  CONFIGURACIÓN INICIAL
-   • Carga variables de entorno (.env)
-   • Define rutas de entrada/salida
-   • Crea estructura de carpetas automáticamente
-
-2️  CARGA DE DATOS
-   • Lee archivos Excel (.xlsx, .xls) o CSV
-   • Detecta automáticamente hojas y separadores
-   • Muestra dimensiones del dataset
-
-3️  LIMPIEZA Y NORMALIZACIÓN
-   • Estandariza nombres de columnas (mayúsculas, sin espacios)
-   • Verifica anonimización (elimina datos personales si existen)
-   • Guarda mapeo de nombres originales → normalizados
-
-4️  DETECCIÓN TEMPORAL
-   • Identifica columnas de fecha/año
-   • Extrae año de fechas automáticamente
-   • Detecta rango temporal disponible (2021-2025)
-
-5️  DICCIONARIO DE DATOS
-   • Documenta todas las variables del dataset
-   • Clasifica por tipo: numéricas, categóricas, identificadores, etc.
-   • Calcula: nulos, únicos, cardinalidad, primer valor
-   • Exporta a Excel y CSV
-
-6️  VERIFICACIÓN DE CALIDAD
-   • Detecta duplicados completos
-   • Identifica columnas constantes o casi vacías (>90% nulos)
-   • Encuentra columnas con alta cardinalidad
-   • Calcula métricas: % nulos, memoria usada
-   • Genera reporte JSON de calidad
-
-7️ ANÁLISIS EXPLORATORIO
-   • Frecuencias de variables categóricas (Top 20)
-   • Estadísticas descriptivas de numéricas
-   • Genera gráficos de barras e histogramas
-   • Limita a primeras 15 categóricas y 10 numéricas
-8️  ANÁLISIS ESPACIO-TEMPORAL  (NUEVO - Objetivo principal)
-   • Agrupa intervenciones por localidad y año
-   • Calcula tendencias: aumento/disminución por localidad
-   • Identifica zonas de alerta con cambios >20%
-   • Genera:
-     - Tabla pivote localidad × año
-     - Gráfico de evolución temporal (Top 10 localidades)
-     - Mapa de calor de intervenciones
-
-9️  ANÁLISIS RÉGIMEN DE SALUD (NUEVO - Objetivo específico 3)
-   • Distribuye intervenciones por tipo de afiliación (subsidiado, contributivo)
-   • Cruza localidad × régimen de salud (porcentajes)
-   • Identifica Top 10 localidades con mayor % subsidiado
-   • Genera gráficos:
-     - Distribución general de regímenes
-     - Barras apiladas por localidad
-
-10 CRUCES DE VARIABLES
-   • Localidad × Tipo de intervención
-   • Año × Tipo de intervención
-   • Motivo × Servicio (si existen)
-   • Exporta matrices y mapas de calor
-
-10.1 VISUALIZACIONES GENERALES
-   • Valores faltantes (Top 20)
-   • Matriz de correlación de variables numéricas
-
-1️0.2 DOCUMENTACIÓN MARKDOWN
-   • Genera reporte completo siguiendo CRISP-DM:
-     - 2.1 Collect Initial Data
-     - 2.2 Describe Data
-     - 2.3 Explore Data
-     - 2.4 Verify Data Quality
-   • Incluye tablas de zonas de alerta
-   • Lista archivos generados
-
-============================================================
- ARCHIVOS DE SALIDA GENERADOS
-============================================================
-
- reports/tables/
-├── diccionario_datos.xlsx        # Documentación completa de variables
-├── column_mapping.json            # Mapeo de nombres originales
-├── quality_report.json            # Reporte de calidad JSON
-├── quality_summary.csv            # Resumen de calidad CSV
-├── distribucion_localidad_año.csv # Datos espacio-temporales
-├── matriz_localidad_año.xlsx     # Tabla pivote
-├── tendencias_por_localidad.xlsx # Cambios y tendencias
-├── zonas_alerta.csv              #  Localidades con cambios >20%
-├── distribucion_regimen_salud.csv
-├── regimen_por_localidad_porcentaje.xlsx
-├── top_localidades_subsidiado.csv
-├── cruce_localidad_tipo_intervencion.xlsx
-├── cruce_año_tipo_intervencion.xlsx
-├── estadisticas_numericas.xlsx
-└── frecuencia_*.csv (múltiples)  # Frecuencias por variable
-
- reports/figures/temporal/
-└── evolucion_temporal_top10.png  # Serie temporal por localidad
-
- reports/figures/spatial/
-├── heatmap_localidad_año.png     # Mapa de calor
-├── top_subsidiado_localidades.png
-└── regimen_por_localidad_stacked.png
-
- reports/figures/exploratory/
-├── missing_values.png             # Valores faltantes
-├── correlation_matrix.png         # Correlaciones
-├── distribucion_regimen.png
-├── cruce_localidad_tipo.png
-├── dist_*.png (múltiples)        # Distribuciones categóricas
-└── hist_*.png (múltiples)        # Histogramas numéricas
-
- reports/
-└── data_summary.md                #  Reporte Markdown completo
-
-============================================================
- FUNCIONES PRINCIPALES
-============================================================
-
-load_data()              → Carga Excel/CSV con detección automática
-clean_columns()          → Normaliza nombres de columnas
-anonymize()              → Verifica y elimina datos personales
-detect_temporal_columns()→ Detecta y extrae variables temporales
-generate_dictionary()    → Genera diccionario de datos
-clasificar_variable()    → Clasifica variables por tipo
-verify_quality()         → Verifica calidad del dataset
-exploratory_analysis()   → EDA de categóricas y numéricas
-analyze_spatiotemporal() → Análisis espacio-temporal (CORE)
-analyze_health_regime()  → Análisis régimen subsidiado
-cross_analysis()         → Cruces de variables clave
-plot_missing()           → Gráfico de valores faltantes
-plot_correlation()       → Matriz de correlación
-generate_summary_md()    → Genera reporte Markdown
-main()                   → Flujo principal (orquestador)
-
-============================================================
- CONFIGURACIÓN REQUERIDA
-============================================================
-
-1. Archivo .env con:
-   DATA_FILE=data/raw/base_datos_completa_NNA_TI_anon.xlsx
-
-2. Librerías necesarias:
-   - pandas, numpy (manipulación de datos)
-   - matplotlib, seaborn (visualización)
-   - python-dotenv (variables de entorno)
-   - openpyxl (lectura/escritura Excel)
-
-3. Estructura de carpetas (se crea automáticamente):
-   - data/raw/ (entrada)
-   - reports/tables/ (tablas)
-   - reports/figures/ (gráficos)
-
-============================================================
- CARACTERÍSTICAS ESPECIALES
-============================================================
-
-Detección automática de formatos (Excel/CSV)
-Manejo de datos ya anonimizados (no re-encripta)
-Clasificación inteligente de variables
-Identificación automática de zonas de alerta
-Análisis temporal con detección de tendencias
-Cruces automáticos de variables relacionadas
-Exportación múltiple (Excel, CSV, JSON, PNG, MD)
-Reportes siguiendo metodología CRISP-DM
-Manejo robusto de errores
-Log completo en consola
-
-============================================================
- INDICADORES CLAVE CALCULADOS
-============================================================
-
-- Cambio absoluto: diferencia entre año final e inicial
-- Cambio porcentual: ((final - inicial) / (inicial + 1)) * 100
-- Tendencia: clasificación cualitativa del cambio
-  - Aumento fuerte: >20%
-  - Aumento moderado: 5-20%
-  - Estable: -5% a 5%
-  - Disminución moderada: -20% a -5%
-  - Disminución fuerte: <-20%
-
-- Zonas de alerta: localidades con |cambio| > 20%
-
-============================================================
- RESPONDE A LOS OBJETIVOS DEL PROYECTO
-============================================================
-
-Objetivo 1:  Describir distribución por localidad y año
-Objetivo 2:  Identificar localidades con aumento/disminución
-Objetivo 3:  Relacionar con régimen de afiliación (subsidiado)
-
-Preguntas guía:
- ¿Dónde aumentaron/disminuyeron las intervenciones?
- ¿Qué características tienen las localidades con mayor crecimiento?
- ¿Existe relación entre intervenciones y régimen subsidiado?
-
-
-============================================================
- AUTOR Y VERSIÓN
-============================================================
-
-Proyecto: Análisis NNA Bogotá (2021-2025)
-Metodología: CRISP-DM
-Fase: Data Understanding
-Versión: 2.0 (con análisis espacio-temporal).Karen Suarez
-Fecha: Octubre 2025
-
-============================================================
-"""
-
 # ============================================================
 # 1. CONFIGURACIÓN DE RUTAS
 # ============================================================
@@ -370,44 +139,44 @@ def anonymize(df):
     return df
 
 
-# ============================================================
-# 4. DETECCIÓN AUTOMÁTICA DE VARIABLES TEMPORALES
-# ============================================================
+# ===============================================================
+# 5. PROCESAMIENTO TEMPORAL: LECTURA Y EXTRACCIÓN DEL AÑO
+# ===============================================================
 
-def detect_temporal_columns(df): 
-    """Detecta y procesa columnas de fecha/año (sin tratar 99999 como fecha)."""
+def detect_temporal_columns(df):
+    """
+    Detecta columnas temporales y extrae el año de 'FECHA_INTERVENCION'.
+    - Convierte la fecha correctamente (día/mes/año)
+    - Crea una nueva columna 'AÑO'
+    """
+
     temporal_info = {}
-    date_candidates = [c for c in df.columns if any(x in c.upper() for x in ['FECHA', 'DATE', 'AÑO', 'ANO', 'YEAR', 'MES', 'MONTH'])]
+    fecha_cols = [c for c in df.columns if 'FECHA' in c]
 
-    for col in date_candidates:
-        if pd.api.types.is_datetime64_any_dtype(df[col]):
-            temporal_info[col] = 'datetime'
-        elif df[col].dtype == 'object':
-            try:
-                # No intentar convertir valores tipo '99999'
-                df[col] = pd.to_datetime(df[col].replace('99999', np.nan), errors='coerce')
-                temporal_info[col] = 'datetime_converted'
-            except:
-                pass
+    # --- Conversión de columnas tipo fecha ---
+    for col in fecha_cols:
+        try:
+            df[col] = pd.to_datetime(df[col], errors='coerce', dayfirst=True)
+            temporal_info[col] = int(df[col].notna().sum())
+        except Exception as e:
+            print(f"⚠️ No se pudo convertir la columna {col}: {e}")
 
-    # Extraer año si hay columnas de fecha válidas
-    for col in temporal_info.keys():
-        if 'AÑO' not in df.columns and 'YEAR' not in df.columns:
-            df['AÑO'] = df[col].dt.year
-            print(f"   ✓ Columna 'AÑO' extraída de {col}")
+    # --- Extracción del año solo de FECHA_INTERVENCION ---
+    if 'FECHA_INTERVENCION' in df.columns:
+        df['AÑO'] = df['FECHA_INTERVENCION'].dt.year
 
-    # Validar rango de años 2021–2025
-    if 'AÑO' in df.columns:
-        df['AÑO'] = pd.to_numeric(df['AÑO'], errors='coerce')
-        df.loc[(df['AÑO'] < 2021) | (df['AÑO'] > 2025), 'AÑO'] = np.nan
-        years = df['AÑO'].dropna().unique()
-        print(f" Años detectados válidos: {sorted([int(y) for y in years])}")
-        temporal_info['years_available'] = sorted([int(y) for y in years])
+        # Filtrar solo años válidos entre 2021 y 2025
+        df = df[df['AÑO'].between(2021, 2025, inclusive="both")]
+
+        temporal_info['AÑO'] = sorted(df['AÑO'].dropna().unique().tolist())
     else:
-        print("  No se detectó columna de año válida")
+        print("⚠️ No se encontró la columna 'FECHA_INTERVENCION' en el DataFrame.")
+
+    # --- Mostrar resumen de columnas temporales detectadas ---
+    print("\n📅 Información temporal detectada:")
+    print(json.dumps(temporal_info, indent=4, ensure_ascii=False))
 
     return df, temporal_info
-
 
 # ============================================================
 # 5. DICCIONARIO DE DATOS AMPLIADO (Versión ajustada a NNA)
@@ -972,114 +741,110 @@ def generate_summary_md(df, quality, dic, temporal_info, spatial_results):
 
 
 # ============================================================
-# 13. FLUJO PRINCIPAL
+# BLOQUE PRINCIPAL DE EJECUCIÓN
 # ============================================================
 
-def main():
-    """Flujo principal de Data Understanding"""
-    print("="*70)
-    print(" DATA UNDERSTANDING - PROYECTO NNA BOGOTÁ (2021-2025)")
-    print("="*70)
-    print()
-    
-    # 1. Carga de datos
-    print(" PASO 1: Carga de datos")
-    print("-"*70)
-    df = load_data(file_path)# Cargar datos
-    print()
-    
-    # 2. Limpieza y normalización
-    print(" PASO 2: Limpieza y normalización") 
-    print("-"*70) # Limpieza y normalización
+if __name__ == "__main__":
+    # 1️⃣ Cargar los datos
+    df = load_data(file_path)
+
+    # 2️⃣ Limpieza de columnas y anonimización
     df = clean_columns(df)
     df = anonymize(df)
-    print()
-    
-    # 3. Detección temporal
-    print(" PASO 3: Detección de variables temporales")
-    print("-"*70)
+
+    # 3️⃣ Procesamiento temporal
     df, temporal_info = detect_temporal_columns(df)
-    print()
-    
-    # 4. Diccionario de datos
-    print(" PASO 4: Generación de diccionario de datos")
-    print("-"*70)
+
+    # 4️⃣ Generar diccionario de datos
     dic = generate_dictionary(df)
-    print()
-    
-    # 5. Verificación de calidad
-    print("  PASO 5: Verificación de calidad")# Verificación de calidad
-    print("-"*70)
+
+    # 5️⃣ Verificar calidad
     quality = verify_quality(df)
-    print()
-    
-    # 6. Análisis exploratorio
-    print(" PASO 6: Análisis exploratorio")
-    print("-"*70)
+
+    # 6️⃣ Análisis exploratorio
     exploratory_analysis(df, dic)
-    print()
-    
-    # 7. Análisis espacio-temporal
-    print("  PASO 7: Análisis espacio-temporal") 
-    print("-"*70)
-    spatial_results = analyze_spatiotemporal(df)
-    print()
-    
-    # 8. Análisis de régimen de salud
-    print(" PASO 8: Análisis de régimen de salud")
-    print("-"*70)
-    analyze_health_regime(df)
-    print()
-    
-    # 9. Cruces de variables
-    print("PASO 9: Cruces de variables clave")#
-    print("-"*70)#
-    cross_analysis(df)
-    print()
-    
-    # 10. Visualizaciones generales
-    print("📊 PASO 10: Visualizaciones generales")
-    print("-"*70)#
-    plot_missing(df)
-    plot_correlation(df)
-    print(" Visualizaciones generales completadas")
-    print()
-    
-    # 11. Documentación final
-    print(" PASO 11: Generación de documentación")
-    print("-"*70)
-    generate_summary_md(df, quality, dic, temporal_info, spatial_results)
-    print()
-    
-    # Resumen final
-    print("="*70)
-    print(" DATA UNDERSTANDING COMPLETADO CON ÉXITO")
-    print("="*70)
-    print()
-    print(f" Resumen:")
-    print(f"   • Filas procesadas: {df.shape[0]:,}")
-    print(f"   • Columnas analizadas: {df.shape[1]}")
-    print(f"   • Duplicados detectados: {quality['filas_duplicadas']}")
-    print(f"   • Calidad promedio: {100 - quality['promedio_nulos']:.1f}%")
-    print()
-    print(f" Archivos generados en:")
-    print(f"   • Reportes: {REPORTS_DIR}")
-    print(f"   • Tablas: {TABLES_DIR}")# Tablas
-    print(f"   • Figuras: {FIGURES_DIR}")# Figuras
-    print()
-    print(f" Resumen completo disponible en:")
-    print(f"   {SUMMARY_FILE}") 
-    print()
-    print("="*70)
 
+    # 7️⃣ Análisis espacio-temporal
+    spatiotemporal_results = analyze_spatiotemporal(df)
 
-if __name__ == "__main__": # Punto de entrada del script
-    try:
-        main()# Ejecutar flujo principal
-    except Exception as e:
-        print(f"\n ERROR: {str(e)}")# Capturar cualquier error inesperado
-        import traceback # Importar módulo traceback
-        traceback.print_exc() # Imprimir traceback del error
+    # 8️⃣ Análisis de régimen de salud
+    health_results = analyze_health_regime(df)
+
+    # ============================================================
+    # 9️⃣ GUARDAR ARCHIVO PROCESADO CON COLUMNA 'AÑO'
+    # ============================================================
+    output_dir = os.path.join(BASE_DIR, "data", "processed")
+    os.makedirs(output_dir, exist_ok=True)
+
+    output_file = os.path.join(output_dir, "base_nna_understanding.xlsx")
+
+    # Guardar DataFrame incluyendo la nueva columna 'AÑO'
+    df.to_excel(output_file, index=False)
+
+    print(f"\n✅ Archivo final guardado con la columna 'AÑO': {output_file}")
+
+    print("\n✅ Proceso completado correctamente.")
+
+# ============================================================
+# 📊 BLOQUE FINAL: RESUMEN DE RESULTADOS EN CONSOLA
+# ============================================================
+
+print("\n" + "="*70)
+print("🧾 RESUMEN FINAL DE RESULTADOS DEL ANÁLISIS NNA BOGOTÁ (2021–2025)")
+print("="*70)
+
+# --- 1. Información general del dataset ---
+print("\n📌 Información general del dataset:")
+print(f"Total de registros después de limpieza: {len(df)}")
+print(f"Variables totales: {len(df.columns)}")
+print("\nPrimeras columnas:", list(df.columns[:10]))
+
+# --- 2. Valores nulos y duplicados ---
+print("\n🚨 Revisión de calidad de datos:")
+print("Total de valores nulos por columna:")
+print(df.isnull().sum())
+print(f"\nDuplicados encontrados: {df.duplicated().sum()}")
+
+# --- 3. Estadísticas descriptivas ---
+print("\n📈 Estadísticas descriptivas principales:")
+print(df.describe(include='all').transpose())
+
+# --- 4. Resultados de correlaciones numéricas ---
+print("\n🔗 Correlaciones entre variables numéricas (Top 10):")
+corr_matrix = df.corr(numeric_only=True)
+corr_pairs = (
+    corr_matrix.unstack()
+    .sort_values(ascending=False)
+    .drop_duplicates()
+)
+print(corr_pairs.head(10))
+
+# --- 5. Promedios o medidas clave si existen columnas específicas ---
+# (Ajusta nombres de columnas según tu dataset)
+cols_interes = [c for c in df.columns if df[c].dtype in ['float64', 'int64']]
+if cols_interes:
+    print("\n📊 Promedios de variables numéricas de interés:")
+    print(df[cols_interes].mean())
+
+# --- 6. Resultados de pruebas estadísticas (si existen DataFrames con resultados) ---
+for var_name in ['resultados_pruebas', 'resumen_modelo', 'estadisticas_adicionales']:
+    if var_name in locals():
+        print(f"\n📑 Resultados de {var_name}:")
+        print(eval(var_name))
+
+# --- 7. Información temporal o espacial si aplica ---
+if 'fecha' in df.columns:
+    print("\n🕒 Periodo temporal cubierto:")
+    print(f"Desde {df['fecha'].min()} hasta {df['fecha'].max()}")
+if {'latitud', 'longitud'}.issubset(df.columns):
+    print("\n🌍 Cobertura espacial (coordenadas mín./máx.):")
+    print(f"Latitud: {df['latitud'].min()} – {df['latitud'].max()}")
+    print(f"Longitud: {df['longitud'].min()} – {df['longitud'].max()}")
+
+# --- 8. Cierre ---
+print("\n✅ ANÁLISIS COMPLETADO EXITOSAMENTE.")
+print("="*70)
+
 
 # ============================================================
 # FIN DEL SCRIPT

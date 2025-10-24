@@ -3,16 +3,16 @@
 # Limpieza, transformación y preparación de datos
 # ============================================================
 
-import os # Manipulación de rutas
-import pandas as pd # Manipulación de datos
-import numpy as np # Cálculos numéricos
-import re # Expresiones regulares
-import matplotlib.pyplot as plt # Visualización
-import seaborn as sns # Visualización avanzada
-from datetime import datetime # Manejo de fechas
-from dotenv import load_dotenv # Carga variables entorno
-import warnings     # Manejo de warnings
-import json # Manejo de JSON
+import os
+import pandas as pd
+import numpy as np
+import re
+import matplotlib.pyplot as plt
+import seaborn as sns
+from datetime import datetime
+from dotenv import load_dotenv
+import warnings
+import json
 
 # Configuración del entorno
 warnings.filterwarnings('ignore')
@@ -27,234 +27,123 @@ print(" DATA PREPARATION - PROYECTO NNA BOGOTÁ (2021-2025)")
 print("="*70)
 print()
 
-"""
-============================================================
-RESUMEN EJECUTIVO - DATA PREPARATION
-Proyecto: NNA Bogotá (2021-2025)
-============================================================
-
- PROPÓSITO:
-    Limpia, transforma y prepara los datos para análisis posterior.
-    Convierte datos brutos en datos listos para modelado.
-
- OBJETIVO PRINCIPAL:
-    Preparar una base de datos limpia, consistente y sin información
-    personal, lista para análisis espacio-temporal.
-
-============================================================
- ESTRUCTURA DEL PROCESO (7 PASOS)
-============================================================
-
-PASO 1: CARGA DE DATOS
---------
-- Detecta formato del archivo (Excel/CSV)
-- Carga hoja 'BD' si existe, si no, la última hoja
-- Reporta dimensiones y memoria utilizada
-- Validación inicial del archivo
-
-PASO 2: ESTANDARIZACIÓN DE COLUMNAS
---------
-- Limpia nombres de columnas:
-  - Elimina espacios y caracteres especiales
-  - Convierte todo a MAYÚSCULAS
-  - Reemplaza espacios por guiones bajos (_)
-  - Ejemplo: "Nombre Columna!" → "NOMBRE_COLUMNA"
-- Guarda mapeo de cambios en JSON para trazabilidad
-- Elimina guiones bajos duplicados
-
-PASO 3: ELIMINACIÓN DE INFORMACIÓN PERSONAL (PII)
---------
-- Identifica y elimina columnas con datos personales:
-  - Nombres, apellidos, documentos
-  - Teléfonos, correos, direcciones
-  - Información de acudientes
-  - Nombres de EPS/EAPB
-- EXCEPCIONES: Mantiene columnas como:
-  - NUMERO_DE_MANZANA_DEL_CUIDADO
-  - NUMERO_DE_FICHA_ANTERIOR
-- Reporta columnas eliminadas
-
-PASO 4: LIMPIEZA DE INCONSISTENCIAS
---------
-- Limpia texto en columnas categóricas:
-  - Elimina espacios extra
-  - Convierte 'nan', 'None', '' a NaN real
-- Estandariza fechas a formato datetime
-- Elimina registros duplicados completos
-- Estandariza valores categóricos:
-  - 'Si', 'si', 's', '1' → 'SI'
-  - 'No', 'no', 'n', '0' → 'NO'
-  - NOTA: Mantiene '99999' como código válido del sistema
-
-PASO 5: MANEJO DE VALORES FALTANTES
---------
-- Calcula % de nulos por columna
-- Genera reporte de nulos en Excel
-- Identifica columnas con >90% nulos (casi vacías)
-- Imputa valores en categóricas (<50% nulos):
-  - Rellena con 'No especificado'
-- Genera gráfico de Top 20 variables con más nulos
-- NO elimina automáticamente columnas vacías (solo reporta)
-
-PASO 6: ANÁLISIS EXPLORATORIO INICIAL (EDA)
---------
-- Estadísticas descriptivas de variables numéricas:
-  - Media, mediana, desviación estándar, etc.
-  - Exporta a Excel
-- Distribuciones de variables categóricas:
-  - Gráficos de barras para primeras 10 variables
-  - Solo si tienen <50 categorías únicas
-- Análisis temporal:
-  - Si existe columna AÑO o FECHA_INTERVENCION
-  - Genera gráfico de distribución anual
-  - Crea columna AÑO si no existe
-
-PASO 7: EXPORTACIÓN DE BASE FINAL
---------
-- Exporta datos limpios a:
-  - Excel: base_nna_limpia.xlsx
-  - CSV: base_nna_limpia.csv (con UTF-8-BOM)
-- Genera resumen final en JSON con:
-  - Fecha de procesamiento
-  - Dimensiones finales (filas × columnas)
-  - Tamaño en MB
-  - Nombre del archivo
-- Guarda log completo del proceso
-
-============================================================
- ARCHIVOS DE SALIDA
-============================================================
-
- data/processed/
-├── base_nna_limpia.xlsx          #  Base principal limpia (Excel)
-└── base_nna_limpia.csv           # Base limpia en CSV
-
- reports/preparation/
-├── preparation_log.txt           # Log detallado del proceso
-├── mapeo_columnas.json           # Mapeo de nombres originales → limpios
-├── reporte_nulos.xlsx            # Análisis de valores faltantes
-├── estadisticas_descriptivas.xlsx # Stats de variables numéricas
-└── resumen_final.json            # Resumen ejecutivo
-
- reports/preparation/figures/
-├── valores_faltantes.png         # Top 20 variables con nulos
-├── distribucion_anual.png        # Intervenciones por año
-└── dist_*.png                    # Distribuciones de categóricas
-
-============================================================
- DECISIONES CLAVE DE LIMPIEZA
-============================================================
- SE MANTIENEN:
-- Códigos '99999' (son parte del sistema, NO son missing)
-- Columnas NUMERO_DE_MANZANA, NUMERO_DE_FICHA
-- Todas las columnas con <90% de nulos
-
- SE ELIMINAN:
-- Información personal: nombres, teléfonos, correos, direcciones
-- Duplicados completos (filas idénticas)
-- Caracteres especiales en nombres de columnas
-
- SE TRANSFORMAN:
-- Fechas → datetime
-- Texto → limpio sin espacios extra
-- Categorías → estandarizadas (SI/NO/99999)
-- Columnas → MAYÚSCULAS con guiones bajos
-
-============================================================
- CONFIGURACIÓN
-============================================================
-
-Variables de entorno (.env):
-- DATA_FILE: Ruta del archivo de datos original
-
-Librerías requeridas:
-- pandas, numpy: Manipulación de datos
-- matplotlib, seaborn: Visualización
-- python-dotenv: Variables de entorno
-- openpyxl: Lectura/escritura Excel
-
-============================================================
- RESULTADO FINAL
-============================================================
-
-Se obtiene una base de datos:
-✓ Sin información personal (RGPD compliant)
-✓ Con columnas estandarizadas
-✓ Sin duplicados
-✓ Con fechas en formato correcto
-✓ Con categorías estandarizadas
-✓ Lista para análisis espacio-temporal
-
-La base limpia queda en:
- data/processed/base_nna_limpia.xlsx
-
-============================================================
-"""
-
-
-
 # ============================================================
-# CONFIGURACIÓN DE RUTAS
+# CONFIGURACIÓN DE RUTAS - BASE CON COLUMNA 'AÑO'
 # ============================================================
 
 load_dotenv()
 
+# Directorio base del proyecto
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-DATA_FILE = os.getenv("DATA_FILE")
 
-if not DATA_FILE:
-    raise ValueError(" No se encontró la variable DATA_FILE en el archivo .env")
+# Ruta directa al archivo procesado desde Data Understanding
+file_path = os.path.join(
+    BASE_DIR,
+    "data",
+    "processed",
+    "base_nna_understanding.xlsx"
+)
 
-file_path = os.path.join(BASE_DIR, DATA_FILE)
+# Carpetas de salida para esta fase
+PROCESSED_DIR = os.path.join(BASE_DIR, "data", "processed")
+PREP_REPORTS_DIR = os.path.join(BASE_DIR, "reports", "preparation")
+PREP_FIGURES_DIR = os.path.join(PREP_REPORTS_DIR, "figures")
+CLEANED_DATA_FILE = os.path.join(PROCESSED_DIR, "base_nna_limpia.xlsx")
+PREP_LOG_FILE = os.path.join(PREP_REPORTS_DIR, "preparation_log.txt")
 
-# Carpetas de salida
-PROCESSED_DIR = os.path.join(BASE_DIR, "data", "processed") 
-PREP_REPORTS_DIR = os.path.join(BASE_DIR, "reports", "preparation") 
-PREP_FIGURES_DIR = os.path.join(PREP_REPORTS_DIR, "figures") 
-CLEANED_DATA_FILE = os.path.join(PROCESSED_DIR, "base_nna_limpia.xlsx") 
-PREP_LOG_FILE = os.path.join(PREP_REPORTS_DIR, "preparation_log.txt") #
-
+# Crear carpetas si no existen
 for path in [PROCESSED_DIR, PREP_REPORTS_DIR, PREP_FIGURES_DIR]:
-    os.makedirs(path, exist_ok=True)#
+    os.makedirs(path, exist_ok=True)
 
-# Iniciar log
+# Inicializar log
 log_entries = []
 
 def log(message):
-    """Registra mensaje en consola y en log"""
+    """Registra mensaje en consola y en el log"""
     print(message)
     log_entries.append(f"[{datetime.now().strftime('%H:%M:%S')}] {message}")
 
+print(f"\n📂 Archivo de entrada (procesado con columna 'AÑO'):\n{file_path}")
+
 
 # ============================================================
-# PASO 1: CONFIGURACIÓN Y CARGA DE DATOS (Integrado con Understanding)
+# PASO 1: CONFIGURACIÓN Y CARGA DE DATOS
 # ============================================================
 
 def paso1_cargar_datos():
-    """Carga inicial de datos y sincronización con Data Understanding"""
+    """Carga inicial de datos con validación de la columna 'AÑO'"""
     log("\n PASO 1: Configuración y carga de datos")
     log("-"*70)
-    
+
     ext = os.path.splitext(file_path)[-1].lower()
     log(f" Cargando archivo: {os.path.basename(file_path)}")
 
     if ext in ['.xlsx', '.xls']:
-        xls = pd.ExcelFile(file_path)
-        sheet = 'BD' if 'BD' in xls.sheet_names else xls.sheet_names[-1]
-        df = pd.read_excel(file_path, sheet_name=sheet)
-        log(f"   ✓ Hoja cargada: {sheet}")
+        try:
+            xls = pd.ExcelFile(file_path)
+            sheet = 'BD' if 'BD' in xls.sheet_names else xls.sheet_names[-1]
+            df = pd.read_excel(file_path, sheet_name=sheet)
+            log(f"   ✓ Hoja cargada: {sheet}")
+        except PermissionError:
+            log("   ⚠️ Archivo en uso. Intentando lectura alternativa...")
+            import shutil
+            import tempfile
+
+            temp_file = os.path.join(tempfile.gettempdir(), f"temp_{os.path.basename(file_path)}")
+            try:
+                shutil.copy2(file_path, temp_file)
+                xls = pd.ExcelFile(temp_file)
+                sheet = 'BD' if 'BD' in xls.sheet_names else xls.sheet_names[-1]
+                df = pd.read_excel(temp_file, sheet_name=sheet)
+                os.remove(temp_file)
+                log(f"   ✓ Hoja cargada (modo alternativo): {sheet}")
+            except Exception as e:
+                log(f"   ❌ Error: No se puede acceder al archivo")
+                raise PermissionError(
+                    f"\n\n{'='*70}\n"
+                    f"ERROR: El archivo está abierto en otro programa\n"
+                    f"{'='*70}\n"
+                    f"SOLUCIONES:\n"
+                    f"1. Cierra Microsoft Excel completamente\n"
+                    f"2. Verifica en Administrador de Tareas que no haya Excel.exe corriendo\n"
+                    f"3. Espera unos segundos y vuelve a ejecutar el script\n"
+                    f"4. Si persiste, reinicia tu computadora\n"
+                    f"{'='*70}\n"
+                ) from e
+
     elif ext == '.csv':
         df = pd.read_csv(file_path, sep=None, engine='python', encoding='utf-8')
-        log("   ✓ CSV cargado")
+        log("   ✓ CSV cargado correctamente")
     else:
-        raise ValueError("Formato no compatible")
+        raise ValueError("Formato no compatible (solo .xlsx, .xls o .csv)")
 
+    # Información básica
     log(f"   Dimensiones: {df.shape[0]:,} filas × {df.shape[1]} columnas")
     log(f"   Memoria utilizada: {df.memory_usage(deep=True).sum() / 1024**2:.2f} MB")
 
-    # ------------------------------------------------------------
-    # 🔗 Integrar configuración desde Data Understanding
-    # ------------------------------------------------------------
+    # ============================================================
+    # VALIDAR QUE EXISTA LA COLUMNA 'AÑO'
+    # ============================================================
+    if 'AÑO' not in df.columns:
+        log("   ⚠️ La columna 'AÑO' no fue encontrada en la base.")
+        log("   ➜ Intentando extraer 'AÑO' desde la columna 'Fecha_intervencion'...")
+
+        # Intentar crearla si existe la columna de fecha
+        fecha_col = [col for col in df.columns if 'fecha' in col.lower()]
+        if fecha_col:
+            try:
+                df['AÑO'] = pd.to_datetime(df[fecha_col[0]], errors='coerce').dt.year
+                log(f"   ✓ Columna 'AÑO' creada a partir de '{fecha_col[0]}'")
+            except Exception as e:
+                log(f"   ❌ Error al crear columna 'AÑO': {e}")
+        else:
+            log("   ❌ No se encontró ninguna columna con nombre parecido a 'Fecha_intervencion'")
+    else:
+        log("   ✓ Columna 'AÑO' detectada correctamente en la base")
+
+    # ============================================================
+    # CARGAR CONFIGURACIÓN DESDE DATA UNDERSTANDING (si existe)
+    # ============================================================
     understanding_config = os.path.join(BASE_DIR, "reports", "understanding", "config_understanding.json")
     global CODIGOS_VALIDOS
 
@@ -270,14 +159,13 @@ def paso1_cargar_datos():
 
     return df
 
-
 # ============================================================
 # PASO 2: ESTANDARIZACIÓN DE NOMBRES DE COLUMNAS
 # ============================================================
 
 def paso2_estandarizar_columnas(df): 
     """Limpia y estandariza nombres de columnas""" 
-    log("\n  PASO 2: Estandarización de nombres de columnas") 
+    log("\n PASO 2: Estandarización de nombres de columnas") 
     log("-"*70) 
     
     original_cols = df.columns.tolist() 
@@ -285,19 +173,19 @@ def paso2_estandarizar_columnas(df):
     # Limpieza y normalización
     df.columns = (
         df.columns
-        .str.strip()                          # Eliminar espacios
-        .str.replace(r'\s+', '_', regex=True) # Espacios a guiones bajos
-        .str.replace(r'[^\w_]', '', regex=True) # Eliminar caracteres especiales
-        .str.upper()                          # Todo en mayúsculas
+        .str.strip()
+        .str.replace(r'\s+', '_', regex=True)
+        .str.replace(r'[^\w_]', '', regex=True)
+        .str.upper()
     )
     
     # Eliminar guiones bajos duplicados
-    df.columns = df.columns.str.replace(r'_+', '_', regex=True).str.strip('_') #
+    df.columns = df.columns.str.replace(r'_+', '_', regex=True).str.strip('_')
     
     # Mapeo de cambios
     cambios = {orig: nuevo for orig, nuevo in zip(original_cols, df.columns) if orig != nuevo} 
     
-    log(f" Columnas estandarizadas: {len(df.columns)} variables")#
+    log(f" Columnas estandarizadas: {len(df.columns)} variables")
     log(f"   Columnas modificadas: {len(cambios)}")
     
     # Guardar mapeo
@@ -318,12 +206,9 @@ def paso3_eliminar_pii(df):
     
     # Columnas con información personal
     pii_patterns = [
-        'USUARIO', 'NOMBRE', 'APELLIDO', 'DOCUMENTO', 'CEDULA', 'IDENTIFICACION',
-        'DIRECCION', 'DIRECCION', 'DOMICILIO', 'RESIDENCIA',
+        'NOMBRE', 'APELLIDO', 'DOCUMENTO', 'CEDULA', 'IDENTIFICACION',
         'CORREO', 'EMAIL', 'MAIL',
-        'TELEFONO', 'CELULAR', 'MOVIL', 'CONTACTO',
-        'RESPONSABLE', 'ACUDIENTE', 'TUTOR',
-        'NOMBRE_EAPB', 'EPS'
+        'RESPONSABLE', 'ACUDIENTE', 'TUTOR'
     ]
     
     # Identificar columnas PII
@@ -348,7 +233,93 @@ def paso3_eliminar_pii(df):
 
 
 # ============================================================
-# PASO 4: Limpieza de inconsistencias (alineado con Data Understanding)
+# PASO 3B: ELIMINACIÓN DE VARIABLES ADMINISTRATIVAS Y NO RELEVANTES
+# ============================================================
+
+def paso3b_eliminar_administrativas(df):
+    """Elimina variables administrativas, de contacto y seguimiento individual que no aportan al análisis territorial/temporal"""
+    log("\n PASO 3B: Eliminación de variables administrativas y no relevantes")
+    log("-"*70)
+    
+    # Lista completa de columnas a eliminar (usando patrones parciales)
+    admin_patterns = [
+        # Variables administrativas
+        'USUARIO', 'BASE_ORIGEN', 'RED_FIC', 'NOMBRE_EAPB', 
+        
+        # Información de contacto
+        'TELEFONO', 'CORREO', 'DIRECCION_DE_LA_VIVIENDA', 'DIRECCION_DEL_TRABAJO',
+        
+        # Información muy granular
+        'NUMERO_DE_MANZANA_DEL_CUIDADO', 'MANZANA_DEL_CUIDADO', 'NOMBRE_DE_LA_UT',
+        
+        # Variables de seguimiento individual
+        'FECHA_SEGUIMIENTO_CIERRE', 'NNA_DESVINCULADO_DE_LA_ACTIVIDAD_LABORAL',
+        'INTERVENCION_DE_NINO_NINA_O_ADOLESCENTE_QUE_TERMINA_EL_PROCESO',
+        
+        # Alertas individuales
+        'ALERTAS_EN_NUTRICION', 'ALERTAS_PSICOSOCIALES', 'ALERTAS_SALUD_BUCAL',
+        'ALERTAS_INFANCIA', 'ALERTAS_EN_MUJERES',
+        
+        # Variables clínicas individuales
+        'ETAPA_DE_GESTACION', 'PESO', 'TALLA_CM', 'CLASIFICACION_NUTRICIONAL',
+        'REQUIERE_ASESORIA_DE_NUTRICION', 'CATEGORIAS_DE_LA_DISCAPACIDAD',
+        'CONDICIONES_CRONICAS',
+        
+        # Acompañamientos (perfiles individuales)
+        'ACOMPANAMIENTO_1_PERFIL', 'ACOMPANAMIENTO_2_PERFIL',
+        'ACOMPANAMIENTO_3_PERFIL', 'ACOMPANAMIENTO_4_PERFIL',
+        
+        # Temas tratados (demasiado específicos)
+        'TEMAS_TRATADOS', 'IEC'
+    ]
+    
+    # Identificar columnas que coincidan con los patrones
+    cols_admin = []
+    for col in df.columns:
+        for pattern in admin_patterns:
+            if pattern in col:
+                cols_admin.append(col)
+                break  # Una vez encontrada, no seguir buscando
+    
+    # Eliminar duplicados de la lista
+    cols_admin = list(set(cols_admin))
+    
+    # Verificar qué columnas realmente existen antes de eliminar
+    cols_existentes = [col for col in cols_admin if col in df.columns]
+    
+    if cols_existentes:
+        df = df.drop(columns=cols_existentes)
+        log(f" Variables administrativas eliminadas: {len(cols_existentes)}")
+        log(f"\n   Categorías eliminadas:")
+        
+        # Agrupar por tipo para mejor visualización
+        tipos = {
+            'Administrativas': ['USUARIO', 'BASE_ORIGEN', 'RED_FIC', 'NOMBRE_EAPB', 'NOMBRE_DE_LA_UT'],
+            'Contacto': ['TELEFONO', 'CORREO', 'DIRECCION'],
+            'Geográficas granulares': ['MANZANA', 'NUMERO_DE_MANZANA'],
+            'Seguimiento individual': ['FECHA_SEGUIMIENTO', 'NNA_DESVINCULADO', 'INTERVENCION'],
+            'Alertas': ['ALERTAS'],
+            'Clínicas': ['PESO', 'TALLA', 'NUTRICIONAL', 'GESTACION', 'DISCAPACIDAD', 'CRONICAS'],
+            'Acompañamientos': ['ACOMPANAMIENTO'],
+            'Intervención específica': ['TEMAS_TRATADOS', 'IEC']
+        }
+        
+        for tipo, keywords in tipos.items():
+            cols_tipo = [c for c in cols_existentes if any(kw in c for kw in keywords)]
+            if cols_tipo:
+                log(f"\n   {tipo} ({len(cols_tipo)}):")
+                for col in sorted(cols_tipo):
+                    log(f"      • {col}")
+    else:
+        log(" No se encontraron variables administrativas para eliminar")
+    
+    log(f"\n Columnas restantes: {len(df.columns)}")
+    
+    return df
+
+
+# ============================================================
+# PASO 4: LIMPIEZA DE INCONSISTENCIAS
 # ============================================================
 
 def paso4_limpiar_inconsistencias(df):
@@ -356,21 +327,18 @@ def paso4_limpiar_inconsistencias(df):
     log("\n PASO 4: Limpieza de inconsistencias")
     log("-"*70)
 
-    # Solo operar sobre columnas que son texto (tipo object o string)
     text_cols = df.select_dtypes(include=['object', 'string']).columns.tolist()
     log(f"   Columnas de texto detectadas: {len(text_cols)}")
 
     for col in text_cols:
-        # Limpiar espacios en blanco solo en celdas que son realmente texto
         df[col] = df[col].apply(
             lambda x: re.sub(r'\s+', ' ', x.strip()) if isinstance(x, str) else x
         )
-        # Reemplazar cadenas vacías o nulos mal escritos por NaN
         df[col] = df[col].replace(
             ['nan', 'None', 'NULL', '', 'N/A', 'NA', 'n/a', 'na'], np.nan
         )
 
-    # Limpieza de fechas: intentar convertir sin tocar 99999
+    # Limpieza de fechas
     date_cols = [c for c in df.columns if 'FECHA' in c.upper()]
     for col in date_cols:
         try:
@@ -387,7 +355,7 @@ def paso4_limpiar_inconsistencias(df):
     else:
         log("   ✓ No se encontraron duplicados completos")
 
-    # Normalizar variables categóricas comunes
+    # Normalizar variables categóricas
     cat_estandar = {
         'SI': ['Si', 'sí', 'Sí', 'si', 'S', 's', 1],
         'NO': ['No', 'no', 'N', 'n', 0]
@@ -398,18 +366,17 @@ def paso4_limpiar_inconsistencias(df):
             for val, variants in cat_estandar.items():
                 df[col] = df[col].replace(variants, val)
 
-    log("   ✓ Limpieza de inconsistencias completada correctamente (manteniendo 99999)")
+    log("   ✓ Limpieza de inconsistencias completada (manteniendo códigos válidos)")
     return df
 
 
 # ============================================================
-# PASO 5: MANEJO DE VALORES FALTANTES (manteniendo 99999)
+# PASO 5: MANEJO DE VALORES FALTANTES (elimina filas con "n/a", "na", etc.)
 # ============================================================
 
 def paso5_manejar_faltantes(df):
-    """Genera reportes de nulos reales y de códigos válidos (ej. 99999).
-    Cuenta tanto la forma numérica como la string del código válido."""
-    log("\n PASO 5: Manejo de valores faltantes")
+    """Elimina filas que contienen valores tipo 'n/a', 'na', 'null', '', etc., pero conserva 99999"""
+    log("\n PASO 5: Manejo de valores faltantes (eliminando filas con valores tipo nulo)")
     log("-"*70)
 
     tables_dir = os.path.join(PREP_REPORTS_DIR, 'tables')
@@ -417,64 +384,65 @@ def paso5_manejar_faltantes(df):
     os.makedirs(tables_dir, exist_ok=True)
     os.makedirs(figures_dir, exist_ok=True)
 
-    # --- Definir códigos válidos a considerar (por defecto 99999) ---
-    # Si exportaste configuración desde data_understanding, CODIGOS_VALIDOS ya debería existir.
-    try:
-        codigos = CODIGOS_VALIDOS
-    except NameError:
-        codigos = ["99999"]
+    # ---------------------------
+    # 1️⃣ Reemplazar variantes textuales de nulos por NaN
+    # ---------------------------
+    patrones_nulos = ['n/a', 'N/A', 'na', 'NA', 'Na', 'nan', 'Nan', 'None', 'NULL', 'null', '']
+    
+    text_cols = df.select_dtypes(include=['object', 'string']).columns.tolist()
+    for col in text_cols:
+        df[col] = df[col].replace(patrones_nulos, np.nan)
 
-    # --- Crear una copia temporal donde reemplazamos los códigos válidos por NaN
-    temp = df.copy()
+    log(f"   ✓ Limpieza textual aplicada a {len(text_cols)} columnas de texto")
 
-    for code in codigos:
-        # reemplazar tanto la forma numérica como la string
-        temp.replace([code, str(code)], np.nan, inplace=True)
+    # ---------------------------
+    # 2️⃣ Eliminar filas que contienen algún NaN real
+    # ---------------------------
+    filas_antes = len(df)
+    df = df.dropna(how='any')  # elimina toda fila que tenga al menos un NaN real
+    filas_despues = len(df)
+    filas_eliminadas = filas_antes - filas_despues
 
-    # --- Reporte de nulos reales (ahora sin contar códigos válidos) ---
-    missing_report = temp.isnull().sum().reset_index()
-    missing_report.columns = ['Variable', 'Nulos']
-    missing_report['Porcentaje'] = (missing_report['Nulos'] / len(df) * 100).round(6)
-    missing_report = missing_report.sort_values(by='Porcentaje', ascending=False)
-    missing_report.to_excel(os.path.join(tables_dir, 'reporte_nulos.xlsx'), index=False)
-    log("   ✓ Reporte de nulos reales generado (reporte_nulos.xlsx)")
+    log(f"   ✓ Filas eliminadas por contener valores tipo nulo: {filas_eliminadas:,}")
 
-    # Columnas con >90% de nulos reales
-    high_missing = missing_report[missing_report['Porcentaje'] > 90]
-    if not high_missing.empty:
-        log(f"     Columnas con >90% nulos reales: {len(high_missing)}")
-        log(f"   Considerar: {', '.join(high_missing['Variable'].tolist()[:10])}...")
+    # ---------------------------
+    # 3️⃣ Calcular completitud global (sin tocar los 99999)
+    # ---------------------------
+    total_celdas = len(df) * len(df.columns)
+    total_nulos = int(df.isnull().sum().sum())
+    porcentaje_valido = ((total_celdas - total_nulos) / total_celdas) * 100
 
-    # --- Reporte de frecuencias para cada código válido (ej. 99999) ---
-    for code in codigos:
-        freq_series = df.apply(lambda col: ((col == code) | (col == str(code))).sum())
-        report_code = freq_series.reset_index()
-        report_code.columns = ['Variable', f'Frecuencia_{code}']
-        report_code = report_code[report_code[f'Frecuencia_{code}'] > 0].sort_values(by=f'Frecuencia_{code}', ascending=False)
-        out_path = os.path.join(tables_dir, f'reporte_{code}.xlsx')
-        report_code.to_excel(out_path, index=False)
-        log(f"   ✓ Reporte de frecuencias '{code}' generado ({out_path})")
+    log(f"   🔹 Porcentaje global de datos válidos (sin nulos reales ni 'n/a'): {porcentaje_valido:.2f}%")
+    log("   ✓ Limpieza completada (manteniendo códigos 99999)")
 
-    # --- Resumen global de faltantes reales ---
-    total_missing = int(missing_report['Nulos'].sum())
-    missing_pct = (total_missing / (len(df) * len(df.columns))) * 100
-    log(f"   Total de valores faltantes reales en la base: {total_missing:,}")
-    log(f"   Porcentaje global de faltantes reales: {missing_pct:.2f}%")
+    # ---------------------------
+    # 4️⃣ Reporte y gráfico
+    # ---------------------------
+    reporte_nulos = pd.DataFrame({
+        'Variable': df.columns,
+        'Nulos': df.isnull().sum().values,
+        'Porcentaje': (df.isnull().sum() / len(df) * 100).round(3)
+    }).sort_values('Porcentaje', ascending=False)
 
-    # --- Gráfico (distribución de % nulos reales) ---
+    reporte_nulos.to_excel(os.path.join(tables_dir, 'reporte_nulos.xlsx'), index=False)
+    log("   ✓ Reporte de nulos reales generado")
+
     plt.figure(figsize=(10, 5))
-    sns.histplot(missing_report['Porcentaje'].clip(0,100), bins=30)
-    plt.title("Distribución de % de valores faltantes reales (sin códigos válidos)")
-    plt.xlabel("% valores faltantes reales")
+    sns.histplot(reporte_nulos['Porcentaje'].clip(0, 100), bins=30)
+    plt.title("Distribución de % de valores faltantes después de eliminar filas con 'n/a'")
+    plt.xlabel("% valores faltantes")
     plt.ylabel("Frecuencia")
     plt.tight_layout()
     plt.savefig(os.path.join(figures_dir, 'faltantes_distribucion.png'))
     plt.close()
-    log("   ✓ Gráfico de distribución de nulos guardado")
+    log("   ✓ Gráfico de distribución guardado")
 
     return df
+
+
+
 # ============================================================
-# PASO 6: ANÁLISIS EXPLORATORIO INICIAL (EDA)
+# PASO 6: ANÁLISIS EXPLORATORIO INICIAL
 # ============================================================
 
 def paso6_eda_inicial(df):
@@ -482,18 +450,18 @@ def paso6_eda_inicial(df):
     log("\n PASO 6: Análisis exploratorio inicial (EDA)")
     log("-"*70)
     
-    # Resumen estadístico de numéricas
+    # Estadísticas numéricas
     num_cols = df.select_dtypes(include=[np.number]).columns
     if len(num_cols) > 0:
         stats = df[num_cols].describe().T
         stats.to_excel(os.path.join(PREP_REPORTS_DIR, "estadisticas_descriptivas.xlsx"))
-        log(f"   ✓ Estadísticas descriptivas guardadas ({len(num_cols)} variables numéricas)")
+        log(f"   ✓ Estadísticas descriptivas guardadas ({len(num_cols)} variables)")
     
-    # Distribución de variables categóricas clave
-    cat_cols = df.select_dtypes(include=['object']).columns[:10]  # Primeras 10
+    # Distribuciones categóricas
+    cat_cols = df.select_dtypes(include=['object']).columns[:10]
     
     for col in cat_cols:
-        if df[col].nunique() < 50:  # Solo si tiene pocas categorías
+        if df[col].nunique() < 50:
             freq = df[col].value_counts().head(15)
             
             plt.figure(figsize=(10, 6))
@@ -504,9 +472,9 @@ def paso6_eda_inicial(df):
             plt.savefig(os.path.join(PREP_FIGURES_DIR, f"dist_{col}.png"), dpi=150)
             plt.close()
     
-    log(f"   ✓ Distribuciones generadas para variables categóricas")
+    log(f"   ✓ Distribuciones categóricas generadas")
     
-    # Análisis temporal si existe columna de año
+    # Análisis temporal
     if 'AÑO' in df.columns or 'FECHA_INTERVENCION' in df.columns:
         if 'AÑO' not in df.columns and 'FECHA_INTERVENCION' in df.columns:
             df['AÑO'] = pd.to_datetime(df['FECHA_INTERVENCION']).dt.year
@@ -525,8 +493,6 @@ def paso6_eda_inicial(df):
             plt.close()
             log(f"   ✓ Distribución temporal generada")
     
-    log(f" Análisis exploratorio inicial completado (sin excluir '99999')")
-    
     return df
 
 
@@ -534,36 +500,84 @@ def paso6_eda_inicial(df):
 # PASO 7: EXPORTACIÓN DE BASE FINAL
 # ============================================================
 
+# ============================================================
+# PASO 7: EXPORTACIÓN DE BASE FINAL (con porcentaje global)
+# ============================================================
+
 def paso7_exportar_datos(df):
-    """Exporta base de datos limpia"""
+    """Exporta base de datos limpia y calcula el porcentaje global de retención"""
     log("\n PASO 7: Exportación de la base final")
     log("-"*70)
-    
-    # Exportar a Excel
+
+    # Guardar base en Excel y CSV
     df.to_excel(CLEANED_DATA_FILE, index=False, engine='openpyxl')
-    log(f" Base limpia exportada a: {CLEANED_DATA_FILE}")
-    
-    # También en CSV
+    log(f" Base limpia exportada a Excel")
+
     csv_file = CLEANED_DATA_FILE.replace('.xlsx', '.csv')
     df.to_csv(csv_file, index=False, encoding='utf-8-sig')
-    log(f" Base limpia exportada a: {csv_file}")
-    
-    # Generar resumen final
+    log(f" Base limpia exportada a CSV")
+
+    # Calcular dimensiones finales
+    filas_finales = df.shape[0]
+    columnas_finales = df.shape[1]
+
+    # Recuperar dimensiones iniciales (guardadas al inicio)
+    try:
+        filas_iniciales = FILAS_INICIALES
+        columnas_iniciales = COLUMNAS_INICIALES
+    except NameError:
+        filas_iniciales = filas_finales
+        columnas_iniciales = columnas_finales
+
+    # Cálculos
+    celdas_iniciales = filas_iniciales * columnas_iniciales
+    celdas_finales = filas_finales * columnas_finales
+    porcentaje_global = (celdas_finales / celdas_iniciales) * 100
+    filas_eliminadas = filas_iniciales - filas_finales
+    columnas_eliminadas = columnas_iniciales - columnas_finales
+
+    # Log detallado
+    log("\n 📊 RESULTADO FINAL DE LA BASE")
+    log("----------------------------------------------------------------------")
+    log(f"   • Filas iniciales:     {filas_iniciales:,}")
+    log(f"   • Columnas iniciales:  {columnas_iniciales}")
+    log(f"   • Filas finales:       {filas_finales:,}")
+    log(f"   • Columnas finales:    {columnas_finales}")
+    log(f"   • Filas eliminadas:    {filas_eliminadas:,}")
+    log(f"   • Columnas eliminadas: {columnas_eliminadas}")
+    log(f"\n   • Celdas iniciales:    {celdas_iniciales:,}")
+    log(f"   • Celdas finales:      {celdas_finales:,}")
+    log(f"   • 🔹 Porcentaje total de la base retenida: {porcentaje_global:.2f}%")
+    log("----------------------------------------------------------------------")
+
+    # Crear resumen JSON con toda la info
     resumen = {
         "fecha_procesamiento": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        "filas_finales": int(df.shape[0]),
-        "columnas_finales": int(df.shape[1]),
+        "dimensiones_iniciales": {
+            "filas": int(filas_iniciales),
+            "columnas": int(columnas_iniciales)
+        },
+        "dimensiones_finales": {
+            "filas": int(filas_finales),
+            "columnas": int(columnas_finales)
+        },
+        "transformacion": {
+            "filas_eliminadas": int(filas_eliminadas),
+            "columnas_eliminadas": int(columnas_eliminadas),
+            "porcentaje_retencion_filas": round((filas_finales / filas_iniciales) * 100, 2),
+            "porcentaje_retencion_columnas": round((columnas_finales / columnas_iniciales) * 100, 2),
+            "porcentaje_retencion_global": round(porcentaje_global, 2)
+        },
         "archivo_salida": os.path.basename(CLEANED_DATA_FILE),
         "tamaño_mb": float((df.memory_usage(deep=True).sum() / 1024**2).round(2))
     }
-    
+
     with open(os.path.join(PREP_REPORTS_DIR, "resumen_final.json"), "w", encoding="utf-8") as f:
         json.dump(resumen, f, indent=2, ensure_ascii=False)
-    
-    log(f" Resumen final generado")
-    
-    return df
 
+    log(f" Resumen final generado con porcentaje global de retención ({porcentaje_global:.2f}%)")
+
+    return df
 
 # ============================================================
 # FUNCIÓN PRINCIPAL
@@ -573,30 +587,60 @@ def main():
     """Ejecuta todo el proceso de preparación"""
     inicio = datetime.now()
     
+    # Variables globales para tracking
+    global FILAS_INICIALES, COLUMNAS_INICIALES
+    
     try:
-        # Ejecutar pasos
         df = paso1_cargar_datos()
+        
+        # Guardar dimensiones originales
+        FILAS_INICIALES = df.shape[0]
+        COLUMNAS_INICIALES = df.shape[1]
+        
         df = paso2_estandarizar_columnas(df)
         df = paso3_eliminar_pii(df)
+        df = paso3b_eliminar_administrativas(df)  # ← NUEVO PASO
         df = paso4_limpiar_inconsistencias(df)
         df = paso5_manejar_faltantes(df)
         df = paso6_eda_inicial(df)
         df = paso7_exportar_datos(df)
         
-        # Resumen final
-        duracion = (datetime.now() - inicio).total_seconds() 
+        duracion = (datetime.now() - inicio).total_seconds()
+        
+        # Calcular porcentajes de retención
+        filas_finales = df.shape[0]
+        columnas_finales = df.shape[1]
+        
+        porcentaje_filas = (filas_finales / FILAS_INICIALES) * 100
+        porcentaje_columnas = (columnas_finales / COLUMNAS_INICIALES) * 100
+        
+        filas_eliminadas = FILAS_INICIALES - filas_finales
+        columnas_eliminadas = COLUMNAS_INICIALES - columnas_finales
         
         log("\n" + "="*70)
         log(" DATA PREPARATION COMPLETADO CON ÉXITO")
         log("="*70)
-        log(f"\n Resumen final:")
-        log(f"   • Filas en base limpia: {df.shape[0]:,}")
-        log(f"   • Columnas en base limpia: {df.shape[1]}")
-        log(f"   • Tiempo de ejecución: {duracion:.2f} segundos")
-        log(f"\n Archivos generados:")
-        log(f"   • Base limpia: {CLEANED_DATA_FILE}")
-        log(f"   • Reportes: {PREP_REPORTS_DIR}")
-        log(f"   • Figuras: {PREP_FIGURES_DIR}")
+        log(f"\n 📊 RESUMEN DE TRANSFORMACIÓN:")
+        log("-"*70)
+        log(f"\n   FILAS (registros):")
+        log(f"      • Iniciales:    {FILAS_INICIALES:>10,}")
+        log(f"      • Finales:      {filas_finales:>10,}")
+        log(f"      • Eliminadas:   {filas_eliminadas:>10,}")
+        log(f"      • Retención:    {porcentaje_filas:>10.2f}%")
+        log(f"\n   COLUMNAS (variables):")
+        log(f"      • Iniciales:    {COLUMNAS_INICIALES:>10}")
+        log(f"      • Finales:      {columnas_finales:>10}")
+        log(f"      • Eliminadas:   {columnas_eliminadas:>10}")
+        log(f"      • Retención:    {porcentaje_columnas:>10.2f}%")
+        log(f"\n   DATOS TOTALES:")
+        log(f"      • Celdas iniciales: {FILAS_INICIALES * COLUMNAS_INICIALES:>12,}")
+        log(f"      • Celdas finales:   {filas_finales * columnas_finales:>12,}")
+        log(f"      • Retención global: {((filas_finales * columnas_finales) / (FILAS_INICIALES * COLUMNAS_INICIALES)) * 100:>11.2f}%")
+        log(f"\n   TIEMPO:")
+        log(f"      • Ejecución:    {duracion:>10.2f} segundos")
+        log(f"\n 📁 Archivos generados:")
+        log(f"      • Base limpia: {os.path.basename(CLEANED_DATA_FILE)}")
+        log(f"      • Reportes: {os.path.basename(PREP_REPORTS_DIR)}/")
         log("\n" + "="*70)
         
     except Exception as e:
@@ -605,7 +649,6 @@ def main():
         traceback.print_exc()
     
     finally:
-        # Guardar log
         with open(PREP_LOG_FILE, "w", encoding="utf-8") as f:
             f.write("\n".join(log_entries))
         log(f"\n📄 Log guardado en: {PREP_LOG_FILE}") 
@@ -614,6 +657,81 @@ def main():
 if __name__ == "__main__":
     main()
 
+    # ============================================================
+# BLOQUE FINAL - RESUMEN GLOBAL CONSOLIDADO (solo texto)
 # ============================================================
-# FIN DEL SCRIPT
+
+def resumen_global(df):
+    """Genera un resumen textual con todos los resultados clave obtenidos"""
+    print("\n" + "="*80)
+    print("🔹 RESUMEN GLOBAL - DATA PREPARATION NNA BOGOTÁ (2021–2025)")
+    print("="*80)
+
+    # Dimensiones
+    filas, columnas = df.shape
+    print(f"\n📊 Dimensiones finales de la base limpia:")
+    print(f"   • Filas: {filas:,}")
+    print(f"   • Columnas: {columnas}")
+
+    # Tipos de datos
+    tipos = df.dtypes.value_counts()
+    print(f"\n🔍 Tipos de datos:")
+    for tipo, count in tipos.items():
+        print(f"   • {tipo}: {count}")
+
+    # Porcentaje de nulos global
+    total_celdas = len(df) * len(df.columns)
+    total_nulos = int(df.isnull().sum().sum())
+    porcentaje_valido = ((total_celdas - total_nulos) / total_celdas) * 100
+    print(f"\n💧 Calidad de datos:")
+    print(f"   • Celdas totales: {total_celdas:,}")
+    print(f"   • Celdas nulas: {total_nulos:,}")
+    print(f"   • Porcentaje de datos válidos: {porcentaje_valido:.2f}%")
+
+    # Estadísticas básicas de variables numéricas
+    num_cols = df.select_dtypes(include=[np.number]).columns
+    if len(num_cols) > 0:
+        desc = df[num_cols].describe().T[['mean', 'std', 'min', 'max']].round(2)
+        print("\n📈 Variables numéricas (resumen):")
+        print(desc.head(10).to_string())
+    else:
+        print("\n📈 No se detectaron variables numéricas.")
+
+    # Variables categóricas con más frecuencia
+    cat_cols = df.select_dtypes(include=['object']).columns
+    if len(cat_cols) > 0:
+        print("\n🔠 Variables categóricas (frecuencias más altas):")
+        for col in cat_cols[:5]:
+            print(f"\n   ▪ {col}:")
+            print(df[col].value_counts(dropna=False).head(3).to_string())
+    else:
+        print("\n🔠 No se detectaron variables categóricas.")
+
+    # Años de intervención
+    if 'AÑO' in df.columns:
+        print("\n🕒 Distribución por año de intervención:")
+        print(df['AÑO'].value_counts().sort_index().to_string())
+    else:
+        print("\n🕒 No se encontró la columna 'AÑO' para distribución temporal.")
+
+    # Tamaño del archivo exportado
+    size_mb = df.memory_usage(deep=True).sum() / 1024**2
+    print(f"\n💾 Tamaño aproximado de la base final en memoria: {size_mb:.2f} MB")
+
+    print("\n✅ FIN DEL RESUMEN GLOBAL")
+    print("="*80)
+    print()
+
+
 # ============================================================
+# EJECUCIÓN DEL BLOQUE FINAL
+# ============================================================
+if __name__ == "__main__":
+    main()
+    
+    try:
+        # Si main() crea df y no lo devuelve, puedes volver a cargarlo
+        df_final = pd.read_excel(CLEANED_DATA_FILE, engine='openpyxl')
+        resumen_global(df_final)
+    except Exception as e:
+        print(f"\n⚠️ No se pudo generar el resumen global automáticamente: {e}")

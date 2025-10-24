@@ -1,4 +1,4 @@
-#  Data Understanding - Proyecto NNA Bogotá (2021-2025)
+#  Data Understanding - Proyecto NNA Bogotá (2021-2025) 
 
 Análisis exploratorio completo de intervenciones con Niños, Niñas y Adolescentes en Bogotá, incluyendo análisis espacio-temporal y de contexto social.
 

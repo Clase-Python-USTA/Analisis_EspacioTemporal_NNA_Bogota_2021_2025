@@ -145,7 +145,7 @@ Thumbs.db
 # Función que crea README.md con información del proyecto
 def crear_readme():
     """Crea el archivo README.md"""
-    contenido = """#  Data Understanding - Proyecto NNA Bogotá (2021-2025)
+    contenido = """#  Data Understanding - Proyecto NNA Bogotá (2021-2025) 
 
 Análisis exploratorio completo de intervenciones con Niños, Niñas y Adolescentes en Bogotá, incluyendo análisis espacio-temporal y de contexto social.
 
@@ -298,10 +298,10 @@ Para dudas o problemas, revisar la documentación en el código fuente.
 **Última actualización**: Octubre 2025
 """
     
-    with open('README.md', 'w', encoding='utf-8') as f:
+    with open('README.md', 'w', encoding='utf-8') as f: # Guarda contenido en README.md
         f.write(contenido)
     
-    print(" Archivo README.md creado")
+    print(" Archivo README.md creado") # Confirma creación
 
 
 def crear_data_understanding():
@@ -474,37 +474,36 @@ def detect_temporal_columns(df):
 # Por limitaciones de espacio, te mostraré cómo crear el archivo completo...
 '''
     
-    print("  Creando script data_understanding.py...")
-    print("   Por favor, copia el código completo del artifact 'data_understanding_nna'")
-    print("   y pégalo en: scripts/data_understanding.py")
-    print()
+    print("  Creando script data_understanding.py...") # Indica inicio de creación
+    print("   Por favor, copia el código completo del artifact 'data_understanding_nna'") # Instrucción al usuario
+    print("   y pégalo en: scripts/data_understanding.py") # Instrucción al usuario
+    print() 
 
 
 def main():
     """Ejecuta la configuración completa del proyecto"""
-    print("="*70)
-    print(" CONFIGURACIÓN AUTOMÁTICA DEL PROYECTO")
-    print("   Análisis NNA Bogotá (2021-2025)")
-    print("="*70)
-    print()
+    print("="*70) # Encabezado de inicio
+    print(" CONFIGURACIÓN AUTOMÁTICA DEL PROYECTO") # Título
+    print("   Análisis NNA Bogotá (2021-2025)") # Subtítulo
+    print("="*70) # Encabezado de inicio
+    print() # Línea en blanco
     
     # Crear estructura
-    crear_estructura_carpetas()
-    crear_env()
-    crear_requirements()
-    crear_gitignore()
-    crear_readme()
+    crear_estructura_carpetas() # Crea carpetas
+    crear_env() # Crea .env
+    crear_requirements() # Crea requirements.txt
+    crear_gitignore() # Crea .gitignore
+    crear_readme() # Crea README.md
     
-    print("="*70)
-    print(" CONFIGURACIÓN COMPLETADA")
-    print("="*70)
+    print("="*70) # Encabezado de fin
+    print(" CONFIGURACIÓN COMPLETADA") # Título
+    print("="*70) # Encabezado de fin
     print()
-    print(" PRÓXIMOS PASOS:")
+    print(" PRÓXIMOS PASOS:") 
+    print("1.  Copia el código del artifact 'data_understanding_nna' completo") 
+    print("   y pégalo en: scripts/data_understanding.py") 
     print()
-    print("1.  Copia el código del artifact 'data_understanding_nna' completo")
-    print("   y pégalo en: scripts/data_understanding.py")
-    print()
-    print("2.   Edita el archivo .env y actualiza la ruta de tus datos:")
+    print("2.   Edita el archivo .env y actualiza la ruta de tus datos:") 
     print("   DATA_FILE=data/raw/tu_archivo.xlsx")
     print()
     print("3.  Instala las dependencias:")
@@ -531,6 +530,6 @@ if __name__ == "__main__":
     try:
         main()  # Ejecuta la configuración completa
     except Exception as e:
-        print(f"\n❌ ERROR: {str(e)}")
-        import traceback
+        print(f"\n ERROR: {str(e)}") # Muestra el error
+        import traceback # Importa módulo traceback
         traceback.print_exc()# Muestra traceback completo
